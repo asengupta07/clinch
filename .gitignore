@@ -1,0 +1,14 @@
+__pycache__/
+research/sol/out/
+research/sol/cache/
+.DS_Store
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+app/node_modules/
+app/dist/
+.env
+.claude/
+app/.claude/
+app/tsconfig.tsbuildinfo
+research/results/sybil_full.txt
