@@ -1,0 +1,17 @@
+{
+ "N": 2000,
+ "eps": 0.001,
+ "worst": {
+  "fixed_overalloc": 3.78429115985646e-15,
+  "budget_violation": 1.946930600367727e-15,
+  "ir_violation": 0.0,
+  "settle_gap_neg": 6.073404530560958e-16,
+  "settle_gap_pos_rel": 0.0001436517805704796,
+  "order_diff": 1.7641475814387343e-13,
+  "price_below_spot": 0.0,
+  "twosided_settle_rel": 1.3292211699009527e-14,
+  "twosided_price_violation": 2.0433716986825126e-16,
+  "split_gain": 9.680579235802229e-05,
+  "split_alloc_diff": 0.9900654849770297
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "overflow": 0,
+ "pool_underpaid": 0,
+ "budget_violation": 0,
+ "ir_violation": 0,
+ "max_rel_diff_X": 0.005591153906192922,
+ "max_rel_diff_Y": 0.005612453193474622,
+ "max_bits": 235,
+ "fixed_overalloc": 0,
+ "runs": 2000,
+ "max_surplus_wei": 28222333398646953843681730140
+}
