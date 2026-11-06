@@ -16,6 +16,10 @@ export const chain = defineChain({
   rpcUrls: { default: { http: [RPC_URL] } },
   blockExplorers: EXPLORER_URL ? { default: { name: "Explorer", url: EXPLORER_URL } } : undefined,
   testnet: CHAIN_ID !== 1,
+  // Canonical Multicall3 (same address on mainnet and Sepolia). Without it wagmi sends each read
+  // as its own eth_call, and a load-balanced public RPC can answer them from nodes at different
+  // heights: right after settle() a page could see status Settled with clearingPrice still 0.
+  contracts: IS_LOCAL ? undefined : { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
 });
 
 export function txUrl(hash: string): string | null {

@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "keeper": "tsx scripts/keeper.ts"
+    "keeper": "tsx scripts/keeper.ts",
+    "dev:sepolia": "vite --mode sepolia",
+    "build:sepolia": "tsc -b && vite build --mode sepolia"
   },
   "dependencies": {
     "@anon-rpc/browser-harness": "0.4.0",

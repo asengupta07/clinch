@@ -3,6 +3,7 @@ import { encodeAbiParameters, getAddress, keccak256, parseAbiItem, type Address,
 import { useReadContract, useReadContracts } from "wagmi";
 import { erc20Abi, factoryAbi, hookAbi, launchAbi } from "../abi";
 import { deployments } from "../config/env";
+import { tokenLabel } from "../config/tokenLabels";
 import { publicClient } from "../config/wagmi";
 import type { MarketOrientation } from "../lib/units";
 
@@ -55,8 +56,8 @@ export function useToken(address: Address | undefined) {
     address && d && d[0].status === "success" && d[2].status === "success"
       ? {
           address,
-          symbol: d[0].result as string,
-          name: d[1].status === "success" ? (d[1].result as string) : (d[0].result as string),
+          symbol: tokenLabel(address)?.symbol ?? (d[0].result as string),
+          name: tokenLabel(address)?.name ?? (d[1].status === "success" ? (d[1].result as string) : (d[0].result as string)),
           decimals: Number(d[2].result),
           faucetAmount: d[3].status === "success" ? (d[3].result as bigint) : 0n,
         }

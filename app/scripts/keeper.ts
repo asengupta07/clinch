@@ -50,6 +50,18 @@ const poolInitialized = parseAbiItem(
 
 type Key = { currency0: Address; currency1: Address; fee: number; tickSpacing: number; hooks: Address };
 
+/** scheme + host only: provider URLs often carry an API key in the path or query */
+const redact = (u: string) => {
+  try {
+    const x = new URL(u);
+    return `${x.protocol}//${x.host}`;
+  } catch {
+    return "(rpc)";
+  }
+};
+// Some providers cap eth_getLogs ranges (Alchemy free: 10 blocks). Scan in chunks of LOG_RANGE.
+const LOG_RANGE = BigInt(process.env.LOG_RANGE || "50000");
+
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const errName = (e: unknown) => {
   if (e instanceof BaseError) {
@@ -82,7 +94,7 @@ async function main() {
     console.error("Refusing to use the public anvil key on a non-local chain. Set KEEPER_PK.");
     process.exit(1);
   }
-  log(`keeper ${DRY ? "(dry run) " : ""}on chain ${chainId} via ${RPC_URL}`);
+  log(`keeper ${DRY ? "(dry run) " : ""}on chain ${chainId} via ${redact(RPC_URL)}`);
   log(`keeper address ${account.address}; hook ${d.hook}; factory ${d.factory}`);
 
   /** simulate, then (unless dry) send and wait. `id` de-duplicates across blocks. */
@@ -111,8 +123,14 @@ async function main() {
   }
 
   async function pools(): Promise<Key[]> {
-    const logs = await pub.getLogs({ address: d.hook, event: poolInitialized, fromBlock: BigInt(d.deployBlock), toBlock: "latest" });
-    return logs.map((l) => l.args.key as Key);
+    const head = await pub.getBlockNumber();
+    const keys: Key[] = [];
+    for (let from = BigInt(d.deployBlock); from <= head; from += LOG_RANGE) {
+      const to = from + LOG_RANGE - 1n < head ? from + LOG_RANGE - 1n : head;
+      const logs = await pub.getLogs({ address: d.hook, event: poolInitialized, fromBlock: from, toBlock: to });
+      for (const l of logs) keys.push(l.args.key as Key);
+    }
+    return keys;
   }
 
   async function tickPools(block: bigint) {
