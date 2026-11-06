@@ -53,18 +53,48 @@ FOUNDRY_PROFILE=ci forge test                   # 2,000 fuzz runs per property
 
 ## Live on Sepolia
 
-Deployed against Uniswap's official Sepolia v4 PoolManager, all contracts verified on Etherscan. Deploy block 12075934.
+Deployed against Uniswap's official Sepolia v4 PoolManager. Hook, factory, demo tokens and the demo launch are verified on Etherscan.
+
+### Core contracts
 
 | Contract | Address |
 | --- | --- |
-| PoolManager (Uniswap) | [`0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) |
-| ClinchHook | [`0x3e755Ab2f2784b7B6e66B2Ac302a1Ab2a0a26880`](https://sepolia.etherscan.io/address/0x3e755Ab2f2784b7B6e66B2Ac302a1Ab2a0a26880#code) |
+| PoolManager (Uniswap v4, official) | [`0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) |
+| ClinchHook (flags `0x2880`) | [`0x3e755Ab2f2784b7B6e66B2Ac302a1Ab2a0a26880`](https://sepolia.etherscan.io/address/0x3e755Ab2f2784b7B6e66B2Ac302a1Ab2a0a26880#code) |
 | ClinchLaunchFactory | [`0x065AeDe864D1Fd2a8c0044dD859e50eff1927694`](https://sepolia.etherscan.io/address/0x065AeDe864D1Fd2a8c0044dD859e50eff1927694#code) |
-| ClinchLaunch (settled demo) | [`0x399C300b8D7E18B5DEc2D7dA503c3EE0efE6e97c`](https://sepolia.etherscan.io/address/0x399C300b8D7E18B5DEc2D7dA503c3EE0efE6e97c#code) |
-| ClinchLaunch (open until 20 Nov 2026, LIVE for USDC) | [`0xcBD1D9584C3cfFd6C85D7c442A2Cba15DE56776B`](https://sepolia.etherscan.io/address/0xcBD1D9584C3cfFd6C85D7c442A2Cba15DE56776B) |
-| Demo USDC / WETH / CLNCH (public faucet) | [`0x6D20…0697`](https://sepolia.etherscan.io/address/0x6D20b101CF658d82A118861FAa9bFA52ce290697#code), [`0x351d…cD11`](https://sepolia.etherscan.io/address/0x351d5515de46fF8D45C36c93df65Da6BB0dacD11#code), [`0x57bb…B023`](https://sepolia.etherscan.io/address/0x57bb725F7D9Ed1D24dF4fc3c27De505D6065B023#code) |
+| Deployer / issuer | [`0xF23be0fbE9DEf26570278F91f3F150Af015a3ECf`](https://sepolia.etherscan.io/address/0xF23be0fbE9DEf26570278F91f3F150Af015a3ECf) |
 
-What is on chain: the demo launch settled with six bidders (ladder replay in the app matches `settle()` exactly), seeded a CLNCH/USDC Clinch pool at its $0.42 clearing price, and a WETH/USDC batch of five orders cleared in one settlement.
+### Demo tokens (public faucet, mock ERC-20s)
+
+| Token | Address | Decimals |
+| --- | --- | --- |
+| Demo USD Coin (USDC) | [`0x6D20b101CF658d82A118861FAa9bFA52ce290697`](https://sepolia.etherscan.io/address/0x6D20b101CF658d82A118861FAa9bFA52ce290697#code) | 6 |
+| Demo Wrapped Ether (WETH) | [`0x351d5515de46fF8D45C36c93df65Da6BB0dacD11`](https://sepolia.etherscan.io/address/0x351d5515de46fF8D45C36c93df65Da6BB0dacD11#code) | 18 |
+| Clinch Demo Token (CLNCH) | [`0x57bb725F7D9Ed1D24dF4fc3c27De505D6065B023`](https://sepolia.etherscan.io/address/0x57bb725F7D9Ed1D24dF4fc3c27De505D6065B023#code) | 18 |
+
+### Clinch pools (on the hook)
+
+| Pool | Pool ID | Notes |
+| --- | --- | --- |
+| WETH/USDC | `0x191dcdad98a9512cfa30b53d9d025e9f8cddcd822483ceb1086a21bb35903dbe` | 5-block batches, fee 0, tick spacing 60; one batch of five orders settled (spot $3,000 to $3,048.92) |
+| CLNCH/USDC | `0xee1b6b26384e9a7733ca4601ff7b912907aec407d26d17e36e10b9769e13ac2a` | Seeded by the demo launch at its $0.42 clearing price |
+
+### Launches
+
+| Launch | Sale token | Status |
+| --- | --- | --- |
+| [`0x399C300b8D7E18B5DEc2D7dA503c3EE0efE6e97c`](https://sepolia.etherscan.io/address/0x399C300b8D7E18B5DEc2D7dA503c3EE0efE6e97c#code) | CLNCH [`0x57bb725F7D9Ed1D24dF4fc3c27De505D6065B023`](https://sepolia.etherscan.io/address/0x57bb725F7D9Ed1D24dF4fc3c27De505D6065B023) | Settled: 1M CLNCH for 252,631.85 USDC at $0.42, six bidders |
+| [`0xcBD1D9584C3cfFd6C85D7c442A2Cba15DE56776B`](https://sepolia.etherscan.io/address/0xcBD1D9584C3cfFd6C85D7c442A2Cba15DE56776B) | LIVE [`0x59dd3c61759890d993fdceb8dc3a644c0c837b60`](https://sepolia.etherscan.io/address/0x59dd3c61759890d993fdceb8dc3a644c0c837b60) | Open until 20 Nov 2026, 12:33 UTC |
+| [`0x1beD0917943b2E9fCfFc233d899c3f07aC8E60eB`](https://sepolia.etherscan.io/address/0x1beD0917943b2E9fCfFc233d899c3f07aC8E60eB) | MNSN* [`0x428dc4c8a0361c76b613b39144670e5f0e7d4981`](https://sepolia.etherscan.io/address/0x428dc4c8a0361c76b613b39144670e5f0e7d4981) | Open until 20 Nov 2026 |
+| [`0x012830eE801C818b5369AcFddb2af5d6f2EAC039`](https://sepolia.etherscan.io/address/0x012830eE801C818b5369AcFddb2af5d6f2EAC039) | CHAI* [`0xd839d5f9152958f085c0989f42d70987ca4b8206`](https://sepolia.etherscan.io/address/0xd839d5f9152958f085c0989f42d70987ca4b8206) | Open until 20 Nov 2026 |
+| [`0x6661d548fa43B986C06266564cE496D35b3a194C`](https://sepolia.etherscan.io/address/0x6661d548fa43B986C06266564cE496D35b3a194C) | DABBA* [`0x3f888fa8ee1fbe9eee14ae28b913d828d02e5c4c`](https://sepolia.etherscan.io/address/0x3f888fa8ee1fbe9eee14ae28b913d828d02e5c4c) | Open until 20 Nov 2026 |
+| [`0x7e971Db0B08531EFbc251003a4d78b04fda5Cb3b`](https://sepolia.etherscan.io/address/0x7e971Db0B08531EFbc251003a4d78b04fda5Cb3b) | LIVE [`0xa1af785811d741592cdc8250bdd4f9bd6ddc8cae`](https://sepolia.etherscan.io/address/0xa1af785811d741592cdc8250bdd4f9bd6ddc8cae) | Open until 20 Nov 2026, 12:42 UTC |
+
+All open launches share one config: 500k tokens for sale plus 100k for the LP, 40% of proceeds to the pool, reserve $0.05, max $1.00, min bid 10 USDC, 40 bids max, 1-day rescue delay. Four of them are accidental duplicates from a retried deploy script; on chain they are all "Clinch Live Token" (LIVE). \*The app shows three of them under display names (Monsoon, Chai, Dabba) from `app/src/config/tokenLabels.ts`; anything created later shows its on-chain name.
+
+Deploy block 12075934. The machine-readable copy is [`contracts/deployments/sepolia.json`](contracts/deployments/sepolia.json) (the app reads `app/src/deployments.sepolia.json`).
+
+What is on chain: the demo launch settled with six bidders (ladder replay in the app matches `settle()` exactly), seeded the CLNCH/USDC Clinch pool at its $0.42 clearing price, a WETH/USDC batch of five orders cleared in one settlement, and claims were paid out on both.
 
 Run the app against Sepolia (connect MetaMask on Sepolia, then use the **Faucet** buttons in the wallet menu for demo USDC and WETH):
 
