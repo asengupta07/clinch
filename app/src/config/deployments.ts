@@ -14,6 +14,10 @@ export interface Deployments {
   swapCurrency0?: Address;
   swapCurrency1?: Address;
   swapTickSpacing?: number;
+  /** World ID comparison arm (contracts/script/DeployHumanGate.s.sol) */
+  humanGate?: Address;
+  humanLaunch?: Address;
+  worldId?: Address;
   deployBlock: number;
 }
 
@@ -36,6 +40,9 @@ export function parseDeployments(raw: Record<string, unknown>): Deployments {
     swapCurrency0: addr("swapCurrency0"),
     swapCurrency1: addr("swapCurrency1"),
     swapTickSpacing: raw.swapTickSpacing === undefined ? undefined : Number(raw.swapTickSpacing),
+    humanGate: addr("humanGate"),
+    humanLaunch: addr("humanLaunch"),
+    worldId: addr("worldId"),
     deployBlock: Number(raw.deployBlock ?? 0),
   };
 }

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, loadEnv, type Plugin } from "vite";
+import { worldRoutes } from "./server/world";
 
 /**
  * Deployments are baked in via `define`, so a redeploy (e.g. scripts/demo.sh again) must restart
@@ -33,7 +34,7 @@ export default defineConfig(({ mode }) => {
   const path = resolve(process.cwd(), env.VITE_DEPLOYMENTS || "src/deployments.local.json");
   const deployments = JSON.parse(readFileSync(path, "utf8"));
   return {
-    plugins: [react(), tailwindcss(), restartOnDeploymentsChange(path)],
+    plugins: [react(), tailwindcss(), restartOnDeploymentsChange(path), worldRoutes(env, deployments)],
     define: {
       __DEPLOYMENTS__: JSON.stringify(deployments),
     },

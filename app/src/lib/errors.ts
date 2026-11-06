@@ -41,6 +41,18 @@ const MESSAGES: Record<string, string | ((args: readonly unknown[]) => string)> 
   InvalidParams: "Invalid parameters.",
   NoFreePoolKey: "No free pool key is available for this pair.",
   HookMismatch: "Hook mismatch.",
+  // HumanGate (World ID arm)
+  NullifierUsed: "This World ID has already verified another wallet. One human, one wallet.",
+  AlreadyVerified: "This wallet is already verified.",
+  NotVerified: "Verify with World ID first. Only verified humans can deposit.",
+  OverCap: "That would take you over the per-human cap for this sale.",
+  NotTransferable: "Human-capped tokens can't move between wallets, only into the sale and back.",
+  NotOwner: "Only the gate owner can do this.",
+};
+
+/** World ID router errors are raised by the router, not the gate, so they are not in its ABI. */
+const SELECTORS: Record<string, string> = {
+  "0x09bde339": "The World ID proof is invalid, or it was made for a different wallet.",
 };
 
 export function errorName(e: unknown): string | null {
@@ -68,6 +80,7 @@ export function humanError(e: unknown): string {
       if (r.reason === "TRANSFER_FROM_FAILED" || r.reason === "TRANSFER_FAILED") {
         return "Token transfer failed: check your balance and approval.";
       }
+      if (r.signature && SELECTORS[r.signature]) return SELECTORS[r.signature];
       if (r.reason) return `Reverted: ${r.reason}`;
       if (name) return `Reverted: ${name}`;
       // solmate ERC20 underflows on insufficient balance/allowance -> panic 0x11

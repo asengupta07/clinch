@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Drop, Gavel, Lifebuoy, Wallet } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Drop, Gavel, IdentificationBadge, Lifebuoy, Wallet } from "@phosphor-icons/react";
 import { useMemo, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import { getAddress, isAddress, type Address } from "viem";
@@ -12,6 +12,8 @@ import { fmt, fmtAmount, fmtDuration, fmtPct, fmtPrice } from "../../lib/format"
 import { toNum } from "../../lib/units";
 import { BidBook } from "./BidBook";
 import { BidForm } from "./BidForm";
+import { HumanPanel, isHumanGated } from "./HumanPanel";
+import { deployments } from "../../config/env";
 import { LadderReplay } from "./LadderReplay";
 import { fmtWhen, humanPrice, PHASE_META, phaseOf, priceAxis, share, timingText, type Phase } from "./shared";
 
@@ -73,6 +75,7 @@ export default function LaunchDetail() {
             <StatusPill tone={meta.tone}>{meta.label}</StatusPill>
             {when === null ? <Skeleton className="h-4 w-28" /> : <span className="num text-ink-2">{when}</span>}
             <span>Sold for {quote.symbol}</span>
+            {isHumanGated(quote.address) && <span className="text-accent">Humans only, World ID</span>}
             <span className="inline-flex items-center gap-1.5">
               Contract <Addr address={launchAddr} copy />
             </span>
@@ -286,6 +289,16 @@ function ActionPanel({ l, sale, quote, addr, phase, now }: { l: LaunchData; sale
   const owedRefund = unclaimed.reduce((a, b) => a + (phase === "settled" ? b.budget - b.paid : b.budget), 0n);
 
   const blocks: ReactNode[] = [];
+  const gated = isHumanGated(quote.address);
+  const underlying = useToken(gated ? deployments.usdc : undefined).token;
+
+  if (gated && underlying) {
+    blocks.push(
+      <Section key="human" icon={<IdentificationBadge size={16} aria-hidden />} title="Verify you're human">
+        <HumanPanel underlying={underlying} voucher={quote} />
+      </Section>,
+    );
+  }
 
   if (phase === "open") {
     blocks.push(
