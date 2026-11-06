@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/*
+  Design tokens. One accent (instrument green), cool neutrals, semantic red/amber only for
+  errors and warnings. Shape rule: controls (buttons, inputs, chips) are 8px, surfaces 12px.
+  Theme: follows the system unless the user picks one (html[data-theme]).
+*/
+:root {
+  --bg: #f5f6f7;
+  --surface: #fcfcfd;
+  --surface-2: #eef0f2;
+  --line: #dfe3e8;
+  --line-strong: #c9cfd6;
+  --ink: #0f1318;
+  --ink-2: #434c58;
+  --ink-3: #5f6875;
+  --accent: #0a6e50;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2f1eb;
+  --accent-line: #a7d3c2;
+  --warn: #8a4b00;
+  --warn-soft: #fbf0df;
+  --bad: #b42318;
+  --bad-soft: #fbe9e7;
+  --chart-1: #00805a;
+  --chart-2: #3d63c9;
+  --chart-3: #b4541a;
+  --chart-4: #8a5cc2;
+  --focus: #2f6fe0;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0d10;
+    --surface: #111418;
+    --surface-2: #171b21;
+    --line: #232931;
+    --line-strong: #323a45;
+    --ink: #e7eaee;
+    --ink-2: #aab2bd;
+    --ink-3: #8b94a0;
+    --accent: #3fbf8f;
+    --accent-ink: #06231a;
+    --accent-soft: #11291f;
+    --accent-line: #24563f;
+    --warn: #e8b465;
+    --warn-soft: #2a2010;
+    --bad: #f0857a;
+    --bad-soft: #2c1513;
+    --chart-1: #259f74;
+    --chart-2: #6886de;
+    --chart-3: #c97c40;
+    --chart-4: #9a78cc;
+    --focus: #7aa7ff;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0d10;
+  --surface: #111418;
+  --surface-2: #171b21;
+  --line: #232931;
+  --line-strong: #323a45;
+  --ink: #e7eaee;
+  --ink-2: #aab2bd;
+  --ink-3: #8b94a0;
+  --accent: #3fbf8f;
+  --accent-ink: #06231a;
+  --accent-soft: #11291f;
+  --accent-line: #24563f;
+  --warn: #e8b465;
+  --warn-soft: #2a2010;
+  --bad: #f0857a;
+  --bad-soft: #2c1513;
+  --chart-1: #259f74;
+  --chart-2: #6886de;
+  --chart-3: #c97c40;
+  --chart-4: #9a78cc;
+  --focus: #7aa7ff;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-focus: var(--focus);
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--bg);
+  min-height: 100dvh;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--line) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* range inputs */
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+/* Hide number spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

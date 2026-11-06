@@ -1,0 +1,387 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_pm",
+        "type": "address",
+        "internalType": "contract IPoolManager"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "MAX_WORK",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "allLaunches",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createLaunch",
+    "inputs": [
+      {
+        "name": "p",
+        "type": "tuple",
+        "internalType": "struct ClinchLaunch.Params",
+        "components": [
+          {
+            "name": "saleToken",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "quoteToken",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "supply",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lpTokens",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lpQuoteBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "reservePrice",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxPrice",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "eps",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "endTime",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "rescueDelay",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "maxBids",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "minBid",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "poolCfg",
+            "type": "tuple",
+            "internalType": "struct ClinchHook.PoolConfig",
+            "components": [
+              {
+                "name": "windowBlocks",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "rescueBlocks",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "maxOrders",
+                "type": "uint16",
+                "internalType": "uint16"
+              },
+              {
+                "name": "maxDepthBps",
+                "type": "uint16",
+                "internalType": "uint16"
+              },
+              {
+                "name": "eps",
+                "type": "uint64",
+                "internalType": "uint64"
+              },
+              {
+                "name": "minOrder0",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "minOrder1",
+                "type": "uint128",
+                "internalType": "uint128"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "launch",
+        "type": "address",
+        "internalType": "contract ClinchLaunch"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployer",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hook",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract ClinchHook"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ladderWork",
+    "inputs": [
+      {
+        "name": "reservePrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "eps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxBids",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "launchCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "launches",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "poolManager",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPoolManager"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setHook",
+    "inputs": [
+      {
+        "name": "_hook",
+        "type": "address",
+        "internalType": "contract ClinchHook"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "HookSet",
+    "inputs": [
+      {
+        "name": "hook",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LaunchCreated",
+    "inputs": [
+      {
+        "name": "launch",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "issuer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "saleToken",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "quoteToken",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "key",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct PoolKey",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "fee",
+            "type": "uint24",
+            "internalType": "uint24"
+          },
+          {
+            "name": "tickSpacing",
+            "type": "int24",
+            "internalType": "int24"
+          },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "HookAlreadySet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HookMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParams",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoFreePoolKey",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotDeployer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TransferAmountMismatch",
+    "inputs": []
+  }
+]
