@@ -92,6 +92,37 @@ Deployed against Uniswap's official Sepolia v4 PoolManager. Hook, factory, demo 
 
 All open launches share one config: 500k tokens for sale plus 100k for the LP, 40% of proceeds to the pool, reserve $0.05, max $1.00, min bid 10 USDC, 40 bids max, 1-day rescue delay. Four of them are accidental duplicates from a retried deploy script; on chain they are all "Clinch Live Token" (LIVE). \*The app shows three of them under display names (Monsoon, Chai, Dabba) from `app/src/config/tokenLabels.ts`; anything created later shows its on-chain name.
 
+### World ID arm: the same launch with a per-human cap
+
+Clinch needs no identity. For people who also want per-person fairness, [`contracts/src/HumanGate.sol`](contracts/src/HumanGate.sol) adds a World ID cap on top without touching the core contracts. The launch is created with HumanGate as its quote token: a 1:1 voucher for USDC (hUSDC) that only a verified human can mint, up to 2,000 USDC in total per human. Each human proves once (signal = their wallet), a reused nullifier is rejected, and hUSDC can only move into the sale, the v4 pool or the hook and back, so one human cannot hand allowance to sybil wallets. Refunds and proceeds come back as hUSDC and redeem 1:1 for USDC.
+
+**How a proof gets on chain (IDKit 4.6, Proof of Human, World staging):**
+
+1. The app asks our server for an RP-signed request (`signRequest`, key stays on the server) and opens `IDKitRequestWidget` with `proofOfHuman({ signal: wallet })`.
+2. The server ([`app/server/world.ts`](app/server/world.ts)) checks the action, environment and that the proof's signal is the requesting wallet. It forwards the result unchanged to the World Developer Portal (`POST /api/v4/verify/{rp_id}`).
+3. If the portal accepts, the server signs `(chain, verifier, signalHash, nullifier, externalNullifier)`.
+4. The wallet calls `HumanGate.verify`, and [`AttestedWorldID`](contracts/src/HumanGate.sol) checks that signature.
+
+World ID 4.0 has no verifier contract on Ethereum Sepolia, which is why the portal does the ZK check and the chain checks the server's signature. The server can vouch only for proofs the portal accepted, and the one-wallet-per-nullifier rule is enforced by the contract, not the server.
+
+| Contract | Address |
+| --- | --- |
+| HumanGate (hUSDC, cap 2,000 USDC per human) | [`0x938c55747b018dA7fbE2BB59ad24f58b7AED2247`](https://sepolia.etherscan.io/address/0x938c55747b018dA7fbE2BB59ad24f58b7AED2247#code) |
+| AttestedWorldID (verifier; attester `0xC6e9…eF08`) | [`0x28C2FBBFb09bF38AeC3A193Be08d87a32AEba385`](https://sepolia.etherscan.io/address/0x28C2FBBFb09bF38AeC3A193Be08d87a32AEba385#code) |
+| ClinchLaunch, humans only (HUMAN for hUSDC, open until 20 Nov 2026, 18:31 UTC) | [`0x2Bf1A67580309fC717581b171DD17A79D1683B7c`](https://sepolia.etherscan.io/address/0x2Bf1A67580309fC717581b171DD17A79D1683B7c) |
+| Clinch Human Token (HUMAN) | [`0x6E739DDfdB361B9B3376172c13a444fB0B5b1E61`](https://sepolia.etherscan.io/address/0x6E739DDfdB361B9B3376172c13a444fB0B5b1E61#code) |
+
+**Verified on Sepolia with the World ID simulator:**
+
+- A real staging Proof of Human for wallet A passed the Developer Portal and was attested by our server.
+- A then registered on chain, deposited 1,500 USDC and bid.
+- The same simulator identity then tried wallet B. The nullifier is the same, so the server refused it: "This World ID is already bound to 0x623A…76F0".
+- B replaying A's attestation reverts on chain with `InvalidProof`.
+
+To run it, put `WORLD_APP_ID`, `WORLD_RP_ID`, `WORLD_RP_SIGNING_KEY`, `WORLD_ACTION`, `WORLD_ENVIRONMENT`, `WORLD_VERIFY_URL` and `WORLD_ATTESTER_PK` in `app/.env.sepolia.local` (gitignored; never `VITE_`-prefixed), then `npm run dev:sepolia`. The routes run inside the Vite dev/preview server. The launch page shows a **Verify you're human** panel, and in staging you scan with the [World ID simulator](https://simulator.worldcoin.org/).
+
+The first mock-verifier deployment is still on chain, with a different gate and two bids: gate `0x33Ec510d41b374F4c9223aD11cC4B6FEc194e8b0`, launch `0x0A33E81c5188b4B142A0E4192d72e8798F683017`. Its `MockWorldID` accepts any proof that commits to the public inputs, so it shows only the rejection paths (`NullifierUsed`, `InvalidProof`, `NotVerified`, `OverCap`, `NotTransferable`). Contract tests: `forge test --match-path test/HumanGate.t.sol` (15 tests, including a gated launch through settle, claims and redemption). Deploy: `forge script script/DeployHumanGate.s.sol` with `WORLD_ATTESTER`, `WORLD_APP_ID` and `WORLD_ACTION`.
+
 Deploy block 12075934. The machine-readable copy is [`contracts/deployments/sepolia.json`](contracts/deployments/sepolia.json) (the app reads `app/src/deployments.sepolia.json`).
 
 What is on chain: the demo launch settled with six bidders (ladder replay in the app matches `settle()` exactly), seeded the CLNCH/USDC Clinch pool at its $0.42 clearing price, a WETH/USDC batch of five orders cleared in one settlement, and claims were paid out on both.
@@ -188,7 +219,7 @@ Configs are bounded so settle always fits in a block: the hook's `isValidConfig`
 ## Repo map
 
 ```text
-contracts/   Foundry: ClinchEngine, ClinchHook, ClinchLaunch, ClinchLaunchFactory, tests, deploy scripts
+contracts/   Foundry: ClinchEngine, ClinchHook, ClinchLaunch, ClinchLaunchFactory, HumanGate (World ID arm), tests, deploy scripts
 app/         Vite + React frontend and settlement keeper
 research/    Python reference engines, simulations, FINDINGS.md, figures
 docs/        Build handoff and the source paper (arXiv 2610.36629)
