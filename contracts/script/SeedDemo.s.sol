@@ -25,7 +25,22 @@ contract SeedDemo is Script {
     ];
 
     function run() external {
-        string memory js = vm.readFile("./deployments/local.json");
+        // Testnet: SEED_KEYS=<6 comma-separated keys> DEPLOYMENTS=./deployments/sepolia.json, and PRIVATE_KEY funds
+        // each seed wallet with FUND_WEI of native gas first. Local: the public anvil keys above.
+        if (vm.envExists("SEED_KEYS")) {
+            uint256[] memory ks = vm.envUint("SEED_KEYS", ",");
+            require(ks.length == 6, "SEED_KEYS needs 6 keys");
+            for (uint256 i; i < 6; ++i) PKS[i] = ks[i];
+            if (vm.envExists("PRIVATE_KEY")) {
+                uint256 fund = vm.envOr("FUND_WEI", uint256(0.02 ether));
+                vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+                for (uint256 i; i < 6; ++i) {
+                    if (vm.addr(PKS[i]).balance < fund) payable(vm.addr(PKS[i])).transfer(fund);
+                }
+                vm.stopBroadcast();
+            }
+        }
+        string memory js = vm.readFile(vm.envOr("DEPLOYMENTS", string("./deployments/local.json")));
         ClinchLaunch launch = ClinchLaunch(vm.parseJsonAddress(js, ".launch"));
         ClinchHook hook = ClinchHook(vm.parseJsonAddress(js, ".hook"));
         MockERC20 usdc = MockERC20(vm.parseJsonAddress(js, ".usdc"));

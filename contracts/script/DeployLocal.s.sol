@@ -7,6 +7,7 @@ import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
+import {FullMath} from "v4-core/libraries/FullMath.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {Currency} from "v4-core/types/Currency.sol";
 import {ModifyLiquidityParams} from "v4-core/types/PoolOperation.sol";
@@ -19,17 +20,23 @@ import {ClinchLaunch} from "../src/ClinchLaunch.sol";
 import {ClinchLaunchFactory} from "../src/ClinchLaunchFactory.sol";
 import {MockERC20} from "../src/mocks/MockERC20.sol";
 
-/// @notice Deploys the full Clinch stack to a local anvil chain and writes deployments/local.json.
+/// @notice Deploys the full Clinch stack and writes a deployments JSON the app reads.
+///         Local (default): fresh PoolManager on anvil -> deployments/local.json.
+///         Testnet: PRIVATE_KEY=.. POOL_MANAGER=<official v4 PoolManager> DEPLOY_OUT=./deployments/sepolia.json
 ///         forge script script/DeployLocal.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
 contract DeployLocal is Script {
     address constant CREATE2_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-    uint256 constant DEPLOYER_PK = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80; // anvil #0
+    // anvil #0, a public test key. Override with PRIVATE_KEY for a real network.
+    uint256 constant ANVIL_PK = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 
     function run() external {
-        address deployer = vm.addr(DEPLOYER_PK);
-        vm.startBroadcast(DEPLOYER_PK);
+        uint256 pk = vm.envOr("PRIVATE_KEY", ANVIL_PK);
+        address deployer = vm.addr(pk);
+        // POOL_MANAGER set (e.g. Uniswap's official Sepolia deployment) -> use it; otherwise deploy a fresh one.
+        address existingManager = vm.envOr("POOL_MANAGER", address(0));
+        vm.startBroadcast(pk);
 
-        IPoolManager manager = new PoolManager(deployer);
+        IPoolManager manager = existingManager != address(0) ? IPoolManager(existingManager) : IPoolManager(address(new PoolManager(deployer)));
         MockERC20 usdc = new MockERC20("Demo USD Coin", "USDC", 6, 50_000e6);
         MockERC20 weth = new MockERC20("Demo Wrapped Ether", "WETH", 18, 20e18);
         MockERC20 cln = new MockERC20("Clinch Demo Token", "CLNCH", 18, 0);
@@ -48,7 +55,8 @@ contract DeployLocal is Script {
         bool wethIs0 = Currency.unwrap(swapKey.currency0) == address(weth);
         // price in raw units, token1 per token0, WAD: 3000 USDC (6 dp) per WETH (18 dp) = 3000e6 / 1e18
         uint256 priceRaw = wethIs0 ? 3000e6 * 1e18 / 1e18 : uint256(1e18) * 1e18 / 3000e6;
-        uint160 sqrtP = uint160(FixedPointMathLib.sqrt(FixedPointMathLib.mulDivDown(priceRaw, 1 << 192, 1e18)));
+        // 512-bit intermediate: when WETH sorts as token1 the raw price is ~3.3e26 and price * 2^192 overflows 256 bits
+        uint160 sqrtP = uint160(FixedPointMathLib.sqrt(FullMath.mulDiv(priceRaw, 1 << 192, 1e18)));
         hook.initializePool(swapKey, sqrtP, _swapCfg(wethIs0));
         weth.mint(deployer, 1_000e18);
         usdc.mint(deployer, 3_000_000e6);
@@ -102,7 +110,7 @@ contract DeployLocal is Script {
         vm.serializeAddress(o, "swapCurrency1", Currency.unwrap(swapKey.currency1));
         vm.serializeInt(o, "swapTickSpacing", swapKey.tickSpacing);
         string memory json = vm.serializeUint(o, "deployBlock", block.number);
-        vm.writeJson(json, "./deployments/local.json");
+        vm.writeJson(json, vm.envOr("DEPLOY_OUT", string("./deployments/local.json")));
         console.log("hook", address(hook));
         console.log("launch", address(launch));
     }
