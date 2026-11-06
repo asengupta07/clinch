@@ -11,7 +11,7 @@ import {MockERC20} from "../src/mocks/MockERC20.sol";
 ///         deployment's demo USDC. The app finds it through factory.allLaunches().
 ///
 /// Env: PRIVATE_KEY, DEPLOYMENTS (default ./deployments/local.json),
-///      LAUNCH_SECONDS (default 14 days), TOKEN_NAME, TOKEN_SYMBOL.
+///      LAUNCH_SECONDS (default 14 days), RESCUE_SECONDS (default 1 day, min 60), TOKEN_NAME, TOKEN_SYMBOL.
 contract CreateLaunch is Script {
     function run() external {
         string memory json = vm.readFile(vm.envOr("DEPLOYMENTS", string("./deployments/local.json")));
@@ -34,7 +34,7 @@ contract CreateLaunch is Script {
         p.maxPrice = 1e18 * 1e6 / 1e18; // $1.00
         p.eps = 1.5e16;
         p.endTime = uint64(block.timestamp + vm.envOr("LAUNCH_SECONDS", uint256(14 days)));
-        p.rescueDelay = 1 days;
+        p.rescueDelay = uint32(vm.envOr("RESCUE_SECONDS", uint256(1 days))); // factory minimum is 60
         p.maxBids = 40;
         p.minBid = 10e6;
         p.poolCfg = ClinchHook.PoolConfig({
