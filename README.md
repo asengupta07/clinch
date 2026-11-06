@@ -51,12 +51,50 @@ cd contracts && forge test                      # 84 tests
 FOUNDRY_PROFILE=ci forge test                   # 2,000 fuzz runs per property
 ```
 
-To deploy to a testnet with an existing v4 PoolManager:
+## Live on Sepolia
+
+Deployed against Uniswap's official Sepolia v4 PoolManager, all contracts verified on Etherscan. Deploy block 12075934.
+
+| Contract | Address |
+| --- | --- |
+| PoolManager (Uniswap) | [`0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) |
+| ClinchHook | [`0x3e755Ab2f2784b7B6e66B2Ac302a1Ab2a0a26880`](https://sepolia.etherscan.io/address/0x3e755Ab2f2784b7B6e66B2Ac302a1Ab2a0a26880#code) |
+| ClinchLaunchFactory | [`0x065AeDe864D1Fd2a8c0044dD859e50eff1927694`](https://sepolia.etherscan.io/address/0x065AeDe864D1Fd2a8c0044dD859e50eff1927694#code) |
+| ClinchLaunch (settled demo) | [`0x399C300b8D7E18B5DEc2D7dA503c3EE0efE6e97c`](https://sepolia.etherscan.io/address/0x399C300b8D7E18B5DEc2D7dA503c3EE0efE6e97c#code) |
+| ClinchLaunch (open until 20 Nov 2026, LIVE for USDC) | [`0xcBD1D9584C3cfFd6C85D7c442A2Cba15DE56776B`](https://sepolia.etherscan.io/address/0xcBD1D9584C3cfFd6C85D7c442A2Cba15DE56776B) |
+| Demo USDC / WETH / CLNCH (public faucet) | [`0x6D20…0697`](https://sepolia.etherscan.io/address/0x6D20b101CF658d82A118861FAa9bFA52ce290697#code), [`0x351d…cD11`](https://sepolia.etherscan.io/address/0x351d5515de46fF8D45C36c93df65Da6BB0dacD11#code), [`0x57bb…B023`](https://sepolia.etherscan.io/address/0x57bb725F7D9Ed1D24dF4fc3c27De505D6065B023#code) |
+
+What is on chain: the demo launch settled with six bidders (ladder replay in the app matches `settle()` exactly), seeded a CLNCH/USDC Clinch pool at its $0.42 clearing price, and a WETH/USDC batch of five orders cleared in one settlement.
+
+Run the app against Sepolia (connect MetaMask on Sepolia, then use the **Faucet** buttons in the wallet menu for demo USDC and WETH):
+
+```bash
+cd app && npm install && npm run dev:sepolia
+```
+
+Settlement keeper (any funded Sepolia key; the public RPC is fine, and `LOG_RANGE=10` makes it work on Alchemy's free tier):
+
+```bash
+cd app && RPC_URL=https://ethereum-sepolia-rpc.publicnode.com KEEPER_PK=0x... VITE_DEPLOYMENTS=src/deployments.sepolia.json npm run keeper
+```
+
+### Deploying your own
+
+Sepolia charges far more gas for contract creation than forge's local estimate, and HookMiner's CREATE2 search can exceed the simulation block gas limit, so both flags below are needed:
 
 ```bash
 cd contracts
-POOL_MANAGER=0x... PRIVATE_KEY=0x... forge script script/DeployTestnet.s.sol --rpc-url $RPC --broadcast
+POOL_MANAGER=0xE03A1074c86CFeDd5C142C4F04F1a1536e203543 PRIVATE_KEY=0x... DEPLOY_OUT=./deployments/sepolia.json \
+  forge script script/DeployLocal.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --slow \
+  --gas-estimate-multiplier 1000 --disable-block-gas-limit
+SEED_KEYS=0x..,0x..,0x..,0x..,0x..,0x.. DEPLOYMENTS=./deployments/sepolia.json PRIVATE_KEY=0x... \
+  forge script script/SeedDemo.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --slow   # optional: 6 bidders + 5 orders
+DEPLOYMENTS=./deployments/sepolia.json PRIVATE_KEY=0x... \
+  forge script script/CreateLaunch.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --slow \
+  --gas-estimate-multiplier 1000  # a fresh 14-day launch
 ```
+
+`script/DeployTestnet.s.sol` deploys only the hook and factory (no demo tokens or pools). Copy the output JSON to `app/src/deployments.sepolia.json` and point `app/.env.sepolia` at it.
 
 ## Where the Uniswap integration lives
 
