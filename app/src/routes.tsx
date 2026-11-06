@@ -1,13 +1,16 @@
+import { lazy } from "react";
 import type { RouteObject } from "react-router";
 import { Link } from "react-router";
 import { Layout } from "./components/Layout";
 import { buttonStyles } from "./components/ui";
-import Home from "./pages/Home";
-import Launches from "./pages/Launches";
-import LaunchDetail from "./pages/launch/LaunchDetail";
-import MarketDetail from "./pages/market/MarketDetail";
-import Markets from "./pages/Markets";
-import Trust from "./pages/Trust";
+import Landing from "./landing/Landing";
+
+const Home = lazy(() => import("./pages/Home"));
+const Launches = lazy(() => import("./pages/Launches"));
+const LaunchDetail = lazy(() => import("./pages/launch/LaunchDetail"));
+const Markets = lazy(() => import("./pages/Markets"));
+const MarketDetail = lazy(() => import("./pages/market/MarketDetail"));
+const Trust = lazy(() => import("./pages/Trust"));
 
 function NotFound() {
   return (
@@ -22,10 +25,11 @@ function NotFound() {
 }
 
 export const routes: RouteObject[] = [
+  { path: "/", element: <Landing /> },
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <Home /> },
+      { path: "/overview", element: <Home /> },
       { path: "/launches", element: <Launches /> },
       { path: "/launches/:address", element: <LaunchDetail /> },
       { path: "/markets", element: <Markets /> },

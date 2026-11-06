@@ -163,7 +163,7 @@ function TwoOfThree() {
   );
 }
 
-function WhaleLab() {
+export function WhaleLab() {
   const curves = useCurves();
   const [n, setN] = useState(50);
   const [visible, setVisible] = useState<Record<Mechanism, boolean>>({ clinch: true, uniform: true, uniform_cap: true, fixed_cap: true });
@@ -249,7 +249,7 @@ function WhaleLab() {
   );
 }
 
-function ShadeLab() {
+export function ShadeLab() {
   const [mode, setMode] = useState<"truth" | "custom">("custom");
   const [v, setV] = useState(80);
   const [b, setB] = useState(67.5);

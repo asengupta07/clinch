@@ -1,0 +1,122 @@
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
+
+/*
+  Landing page. Always dark ("ink" with phosphor green and a warm amber for the rising price).
+  The app tokens are re-declared here so reused app components (Whale Lab, cards) render in the
+  same palette without a light-theme flash.
+*/
+.landing {
+  --l-bg: #070908;
+  --l-bg-2: #0b0e0c;
+  --l-ink: #edf0ea;
+  --l-ink-2: rgb(237 240 234 / 0.66);
+  --l-ink-3: rgb(237 240 234 / 0.42);
+  --l-line: rgb(255 255 255 / 0.075);
+  --l-line-2: rgb(255 255 255 / 0.12);
+  --l-mint: #8fe0b8;
+  --l-mint-deep: #2f9e72;
+  --l-amber: #e6b36d;
+  --l-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* app tokens, dark */
+  --bg: #070908;
+  --surface: #0d100e;
+  --surface-2: #141814;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --ink: #edf0ea;
+  --ink-2: rgb(237 240 234 / 0.7);
+  --ink-3: rgb(237 240 234 / 0.48);
+  --accent: #8fe0b8;
+  --accent-ink: #07130d;
+  --accent-soft: rgb(143 224 184 / 0.1);
+  --accent-line: rgb(143 224 184 / 0.32);
+  --warn: #e6b36d;
+  --warn-soft: rgb(230 179 109 / 0.1);
+  --bad: #f0857a;
+  --bad-soft: rgb(240 133 122 / 0.1);
+  --chart-1: #8fe0b8;
+  --chart-2: #8ea9ff;
+  --chart-3: #e6a061;
+  --chart-4: #c49cf0;
+  --focus: #b8f0d4;
+  color-scheme: dark;
+
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing .serif {
+  font-family: "Newsreader Variable", ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  font-weight: 380;
+  letter-spacing: -0.022em;
+}
+.landing h2,
+.landing h3 {
+  text-wrap: balance;
+}
+.landing p {
+  text-wrap: pretty;
+}
+.landing .serif em {
+  font-style: italic;
+  font-weight: 340;
+}
+
+.landing .mono {
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing .eyebrow {
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* static film grain, fixed so it never repaints on scroll */
+.landing-grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* hairline that fades at both ends */
+.landing .hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--l-line-2) 20%, var(--l-line-2) 80%, transparent);
+}
+
+.landing ::selection {
+  background: rgb(143 224 184 / 0.28);
+}
+
+@keyframes l-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+.landing .live-dot {
+  animation: l-pulse 1.8s var(--l-ease) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .live-dot {
+    animation: none;
+  }
+}

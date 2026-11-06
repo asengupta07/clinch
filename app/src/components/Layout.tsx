@@ -1,5 +1,5 @@
 import { Desktop, Moon, Sun } from "@phosphor-icons/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { NavLink, Outlet, ScrollRestoration } from "react-router";
 import { chain, IS_LOCAL } from "../config/env";
 import { useAnonState } from "../config/anon";
@@ -113,7 +113,7 @@ export function Layout({ children }: { children?: ReactNode }) {
         </div>
       )}
       <main id="main" className="flex-1">
-        {children ?? <Outlet />}
+        <Suspense fallback={<div className="mx-auto max-w-[1240px] px-4 py-24 sm:px-6" aria-busy="true" />}>{children ?? <Outlet />}</Suspense>
       </main>
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-3 px-4 py-6 text-[12.5px] text-ink-3 sm:px-6">
