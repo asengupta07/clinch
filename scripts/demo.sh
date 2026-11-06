@@ -25,4 +25,4 @@ echo "deployed: $(jq -c '{hook,launch,factory}' deployments/local.json)"
 cd "$ROOT/app"
 [ -d node_modules ] || npm install
 echo "app on http://localhost:5173  (keeper: cd app && npm run keeper)"
-npm run dev
+npm run dev:local

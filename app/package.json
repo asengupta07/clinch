@@ -4,14 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "vite --mode sepolia",
+    "build": "tsc -b && vite build --mode sepolia",
+    "preview": "vite preview --mode sepolia",
+    "dev:local": "vite",
+    "build:local": "tsc -b && vite build",
+    "preview:local": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "keeper": "tsx scripts/keeper.ts",
-    "dev:sepolia": "vite --mode sepolia",
-    "build:sepolia": "tsc -b && vite build --mode sepolia"
+    "keeper": "tsx scripts/keeper.ts"
   },
   "dependencies": {
     "@anon-rpc/browser-harness": "0.4.0",

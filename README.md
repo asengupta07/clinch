@@ -44,10 +44,12 @@ git clone --recursive <this repo> && cd clinch
 
 This starts anvil (2-second blocks), deploys the PoolManager, hook (CREATE2-mined address), factory and demo tokens, seeds a live launch and an open WETH/USDC batch, and serves the app at http://localhost:5173. In the app, use **Demo wallets** to click through without MetaMask on the local chain. `cd app && npm run keeper` runs the optional settlement keeper.
 
+The app defaults to Sepolia: `npm run dev`, `npm run build` and `npm run preview` use the Sepolia deployment (`app/.env.sepolia`). The local anvil versions are `npm run dev:local`, `npm run build:local` and `npm run preview:local`, which is what `demo.sh` runs.
+
 To run the tests:
 
 ```bash
-cd contracts && forge test                      # 84 tests
+cd contracts && forge test                      # 99 tests
 FOUNDRY_PROFILE=ci forge test                   # 2,000 fuzz runs per property
 ```
 
@@ -119,7 +121,7 @@ World ID 4.0 has no verifier contract on Ethereum Sepolia, which is why the port
 - The same simulator identity then tried wallet B. The nullifier is the same, so the server refused it: "This World ID is already bound to 0x623A…76F0".
 - B replaying A's attestation reverts on chain with `InvalidProof`.
 
-To run it, put `WORLD_APP_ID`, `WORLD_RP_ID`, `WORLD_RP_SIGNING_KEY`, `WORLD_ACTION`, `WORLD_ENVIRONMENT`, `WORLD_VERIFY_URL` and `WORLD_ATTESTER_PK` in `app/.env.sepolia.local` (gitignored; never `VITE_`-prefixed), then `npm run dev:sepolia`. The routes run inside the Vite dev/preview server. The launch page shows a **Verify you're human** panel, and in staging you scan with the [World ID simulator](https://simulator.worldcoin.org/).
+To run it, put `WORLD_APP_ID`, `WORLD_RP_ID`, `WORLD_RP_SIGNING_KEY`, `WORLD_ACTION`, `WORLD_ENVIRONMENT`, `WORLD_VERIFY_URL` and `WORLD_ATTESTER_PK` in `app/.env.sepolia.local` (gitignored; never `VITE_`-prefixed), then `npm run dev`. The routes run inside the Vite dev/preview server. The launch page shows a **Verify you're human** panel, and in staging you scan with the [World ID simulator](https://simulator.worldcoin.org/).
 
 The first mock-verifier deployment is still on chain, with a different gate and two bids: gate `0x33Ec510d41b374F4c9223aD11cC4B6FEc194e8b0`, launch `0x0A33E81c5188b4B142A0E4192d72e8798F683017`. Its `MockWorldID` accepts any proof that commits to the public inputs, so it shows only the rejection paths (`NullifierUsed`, `InvalidProof`, `NotVerified`, `OverCap`, `NotTransferable`). Contract tests: `forge test --match-path test/HumanGate.t.sol` (15 tests, including a gated launch through settle, claims and redemption). Deploy: `forge script script/DeployHumanGate.s.sol` with `WORLD_ATTESTER`, `WORLD_APP_ID` and `WORLD_ACTION`.
 
@@ -130,7 +132,7 @@ What is on chain: the demo launch settled with six bidders (ladder replay in the
 Run the app against Sepolia (connect MetaMask on Sepolia, then use the **Faucet** buttons in the wallet menu for demo USDC and WETH):
 
 ```bash
-cd app && npm install && npm run dev:sepolia
+cd app && npm install && npm run dev
 ```
 
 Settlement keeper (any funded Sepolia key; the public RPC is fine, and `LOG_RANGE=10` makes it work on Alchemy's free tier):
