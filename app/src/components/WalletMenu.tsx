@@ -1,0 +1,201 @@
+import { CaretDown, Drop, SignOut, Wallet } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
+import { useAccount, useBalance as useEthBalance, useConnect, useDisconnect } from "wagmi";
+import { chain, deployments, IS_LOCAL } from "../config/env";
+import { useBalance, useToken, type TokenMeta } from "../hooks/data";
+import { useTx } from "../hooks/useTx";
+import { erc20Abi } from "../abi";
+import { fmt, fmtAmount, shortAddr } from "../lib/format";
+import { DEMO_CONNECTOR_TYPE, demoConnectorId, demoWallets } from "../wallet/demo";
+import { Badge, Button, CopyButton, cx } from "./ui";
+
+function TokenRow({ token, owner }: { token: TokenMeta; owner: `0x${string}` }) {
+  const bal = useBalance(token.address, owner);
+  const { send, busy } = useTx();
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5">
+      <div className="min-w-0">
+        <div className="num text-[13px] text-ink">
+          {bal.data === undefined ? "…" : fmtAmount(bal.data, token.decimals)} <span className="text-ink-3">{token.symbol}</span>
+        </div>
+      </div>
+      {token.faucetAmount > 0n && (
+        <Button
+          size="sm"
+          variant="ghost"
+          loading={busy}
+          onClick={() =>
+            send({
+              label: `Faucet: ${fmtAmount(token.faucetAmount, token.decimals)} ${token.symbol}`,
+              address: token.address,
+              abi: erc20Abi,
+              functionName: "faucet",
+              args: [],
+              success: `Minted ${fmtAmount(token.faucetAmount, token.decimals)} test ${token.symbol}.`,
+            })
+          }
+        >
+          <Drop size={14} /> Faucet
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export function Balances({ owner }: { owner: `0x${string}` }) {
+  const usdc = useToken(deployments.usdc).token;
+  const weth = useToken(deployments.weth).token;
+  const clnch = useToken(deployments.clnch).token;
+  const eth = useEthBalance({ address: owner });
+  return (
+    <div>
+      <div className="flex items-center justify-between py-1.5">
+        <div className="num text-[13px] text-ink">
+          {eth.data ? fmt(Number(eth.data.value) / 1e18, { max: 4 }) : "…"} <span className="text-ink-3">ETH</span>
+        </div>
+        <span className="text-[12px] text-ink-3">gas</span>
+      </div>
+      {[usdc, weth, clnch].filter(Boolean).map((t) => (
+        <TokenRow key={t!.address} token={t!} owner={owner} />
+      ))}
+    </div>
+  );
+}
+
+export function WalletMenu() {
+  const { address, connector, isConnected, chainId } = useAccount();
+  const { connectors, connectAsync, isPending } = useConnect();
+  const { disconnectAsync } = useDisconnect();
+  const [open, setOpen] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const injected = connectors.filter((c) => c.type !== DEMO_CONNECTOR_TYPE);
+  // EIP-6963 discovered wallets have their own entries; drop the generic one if any were found.
+  const named = injected.filter((c) => c.id !== "injected");
+  const walletOptions = named.length ? named : injected;
+  const isDemo = connector?.type === DEMO_CONNECTOR_TYPE;
+  const demoIdx = isDemo ? demoWallets.find((w) => w.address === address)?.index : undefined;
+
+  const connect = async (id: string) => {
+    setErr(null);
+    const c = connectors.find((x) => x.id === id);
+    if (!c) return;
+    try {
+      if (isConnected) await disconnectAsync();
+      await connectAsync({ connector: c, chainId: chain.id });
+      if (c.type === DEMO_CONNECTOR_TYPE) setOpen(false);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message.split("\n")[0] : String(e));
+    }
+  };
+
+  const wrongChain = isConnected && chainId !== chain.id;
+
+  return (
+    <div className="relative" ref={ref}>
+      <Button
+        variant={isConnected ? "secondary" : "primary"}
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="h-9"
+      >
+        <Wallet size={16} />
+        {isConnected ? (
+          <span className="num text-[13px]">
+            {isDemo && demoIdx !== undefined ? `Demo #${demoIdx}` : shortAddr(address)}
+          </span>
+        ) : (
+          <span className="text-[13px]">Connect</span>
+        )}
+        {wrongChain && <Badge tone="warn" className="h-5 px-1.5">wrong network</Badge>}
+        <CaretDown size={12} />
+      </Button>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Wallet"
+          className="absolute right-0 z-40 mt-2 w-[min(92vw,360px)] rounded-xl border border-line-strong bg-surface p-4 shadow-[0_18px_48px_-20px_rgb(15_19_24/0.5)]"
+        >
+          {isConnected && address ? (
+            <div className="mb-4 border-b border-line pb-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[12px] text-ink-3">{isDemo ? "Demo wallet (local chain only)" : connector?.name}</div>
+                  <div className="num flex items-center gap-1 text-[13px] text-ink">
+                    {shortAddr(address)} <CopyButton value={address} label="Copy address" />
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => disconnectAsync()} aria-label="Disconnect">
+                  <SignOut size={14} /> Disconnect
+                </Button>
+              </div>
+              <div className="mt-2">
+                <Balances owner={address} />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="text-[12px] font-medium text-ink-3">Browser wallet</div>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {walletOptions.length === 0 && <p className="text-[13px] text-ink-3">No browser wallet detected.</p>}
+            {walletOptions.map((c) => (
+              <Button key={c.uid} variant="secondary" className="justify-start" disabled={isPending} onClick={() => connect(c.id)}>
+                {c.icon ? <img src={c.icon} alt="" className="size-4" /> : <Wallet size={16} />}
+                {c.name === "Injected" ? "Browser wallet" : c.name}
+              </Button>
+            ))}
+          </div>
+
+          {IS_LOCAL && demoWallets.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-baseline justify-between">
+                <div className="text-[12px] font-medium text-ink-3">Demo wallets</div>
+                <div className="text-[11.5px] text-ink-3">local anvil only, public test keys</div>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
+                {demoWallets.map((w) => {
+                  const active = isDemo && demoIdx === w.index;
+                  return (
+                    <button
+                      key={w.index}
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => connect(demoConnectorId(w.index))}
+                      aria-pressed={active}
+                      className={cx(
+                        "rounded-lg border px-2.5 py-2 text-left transition-colors",
+                        active ? "border-accent-line bg-accent-soft" : "border-line hover:border-line-strong hover:bg-surface-2",
+                      )}
+                    >
+                      <div className="text-[12.5px] font-medium text-ink">
+                        #{w.index} <span className="font-normal text-ink-3">{w.label}</span>
+                      </div>
+                      <div className="num text-[11.5px] text-ink-3">{shortAddr(w.address)}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {err && <p className="mt-3 text-[12.5px] text-bad">{err}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
