@@ -1,4 +1,4 @@
-import { CheckCircle, Circle } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { erc20Abi, hookAbi } from "../../abi";
@@ -149,81 +149,120 @@ export function OrderForm({
   const recvDec = side === "buy" ? base.decimals : quote.decimals;
   const recvSym = side === "buy" ? base.symbol : quote.symbol;
 
+  const presets = side === "buy" ? [0, 0.005, 0.01] : [0, -0.005, -0.01];
+  const batchLabel = ctx.joinsNew ? (ctx.batchId + 1n).toString() : ctx.batchId.toString();
+
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-5"
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
-      <Segmented
-        label="Side"
-        value={side}
-        onChange={(s) => {
-          setSide(s);
-          setPrice("");
-          setAmount("");
-        }}
-        options={[
-          { value: "buy", label: `Buy ${base.symbol}` },
-          { value: "sell", label: `Sell ${base.symbol}` },
-        ]}
-      />
+      <div className="[&>div]:w-full">
+        <Segmented
+          label="Side"
+          value={side}
+          onChange={(s) => {
+            setSide(s);
+            setPrice("");
+            setAmount("");
+          }}
+          options={[
+            { value: "buy", label: `Buy ${base.symbol}` },
+            { value: "sell", label: `Sell ${base.symbol}` },
+          ]}
+        />
+      </div>
+      <p className="-mt-2 text-[12.5px] text-ink-3">
+        {ctx.joinsNew ? (
+          <>
+            Opens batch <span className="num text-ink-2">#{batchLabel}</span>.
+          </>
+        ) : (
+          <>
+            Joins open batch <span className="num text-ink-2">#{batchLabel}</span> with <span className="num text-ink-2">{ctx.nOrders}</span> order
+            {ctx.nOrders === 1 ? "" : "s"}.
+          </>
+        )}{" "}
+        Spot <span className="num text-ink-2">{fmtPrice(spot, quote.symbol)}</span>
+      </p>
+
       <Field
-        label={side === "buy" ? `Maximum price (${quote.symbol} per ${base.symbol})` : `Minimum price (${quote.symbol} per ${base.symbol})`}
+        label={side === "buy" ? `Maximum price` : `Minimum price`}
         htmlFor="order-price"
         error={errors.price}
         hint={side === "buy" ? "The most you will pay per unit. Your true value is the best answer." : "The least you will accept per unit."}
         right={
-          <div className="flex gap-1">
-            {(side === "buy" ? [0, 0.005, 0.01] : [0, -0.005, -0.01]).map((p) => (
-              <button key={p} type="button" onClick={() => quick(p)} className="rounded-md border border-line px-1.5 py-0.5 text-[11.5px] text-ink-2 hover:border-line-strong hover:text-ink">
-                {p === 0 ? "spot" : `${p > 0 ? "+" : ""}${(p * 100).toFixed(1)}%`}
-              </button>
-            ))}
-          </div>
+          <span className="text-[12px] text-ink-3">
+            {quote.symbol} per {base.symbol}
+          </span>
         }
       >
         <NumberInput id="order-price" value={price} onChange={setPrice} suffix={quote.symbol} placeholder={spot ? String(Math.round(spot * 100) / 100) : ""} invalid={!!errors.price} disabled={busy} describedBy={errors.price ? "order-price-error" : "order-price-hint"} />
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Price presets relative to spot">
+          {presets.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => quick(p)}
+              disabled={busy || !spot}
+              className="inline-flex h-9 items-center rounded-full bg-surface-2 px-3 text-[12.5px] text-ink-2 ring-1 ring-inset ring-line transition-[background-color,color,box-shadow] duration-200 ease-[var(--ease-out-quint)] hover:bg-surface-3 hover:text-ink hover:ring-line-strong active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 sm:h-7"
+            >
+              {p === 0 ? "Spot" : <span className="num">{`${p > 0 ? "+" : ""}${(p * 100).toFixed(1)}%`}</span>}
+            </button>
+          ))}
+        </div>
       </Field>
+
       <Field
-        label={side === "buy" ? `Budget (${quote.symbol} to spend)` : `Amount (${base.symbol} to sell)`}
+        label={side === "buy" ? `Budget` : `Amount to sell`}
         htmlFor="order-amount"
         error={errors.amount}
         hint="Escrowed until the batch settles. Unused budget is refunded on claim."
         right={
           isConnected && bal.data !== undefined ? (
-            <button type="button" className="text-[12.5px] text-ink-3 hover:text-ink" onClick={() => setAmount(toNum(bal.data!, sold.decimals).toString())} disabled={busy}>
-              Balance <span className="num">{fmtAmount(bal.data, sold.decimals)}</span>
-            </button>
+            <span className="flex items-center gap-2 text-[12px] text-ink-3">
+              <span>
+                Balance <span className="num text-ink-2">{fmtAmount(bal.data, sold.decimals)}</span>
+              </span>
+              <button
+                type="button"
+                className="inline-flex h-7 items-center rounded-full px-2.5 text-[12px] font-medium text-accent ring-1 ring-inset ring-accent-line transition-colors duration-200 hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-45"
+                onClick={() => setAmount(toNum(bal.data!, sold.decimals).toString())}
+                disabled={busy}
+                aria-label={`Use full balance, ${fmtAmount(bal.data, sold.decimals)} ${sold.symbol}`}
+              >
+                Max
+              </button>
+            </span>
           ) : null
         }
       >
         <NumberInput id="order-amount" value={amount} onChange={setAmount} suffix={sold.symbol} invalid={!!errors.amount} disabled={busy} describedBy={errors.amount ? "order-amount-error" : "order-amount-hint"} />
       </Field>
 
-      <div className="rounded-lg border border-line bg-surface-2/60 p-4" aria-live="polite">
-        <div className="text-[12.5px] font-medium text-ink">If this batch settled now</div>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          <div>
-            <div className="text-[12px] text-ink-3">You get</div>
-            <div className="num mt-0.5 text-[15px] text-ink">{est ? fmtAmount(est.received, recvDec) : "-"}</div>
-            <div className="text-[11.5px] text-ink-3">{recvSym}</div>
-          </div>
-          <div>
-            <div className="text-[12px] text-ink-3">You spend</div>
-            <div className="num mt-0.5 text-[15px] text-ink">{est ? fmtAmount(est.spent, sold.decimals) : "-"}</div>
-            <div className="text-[11.5px] text-ink-3">{sold.symbol}</div>
-          </div>
-          <div>
-            <div className="text-[12px] text-ink-3">Avg price</div>
-            <div className="num mt-0.5 text-[15px] text-ink">{est?.avg ? fmtPrice(est.avg, quote.symbol) : "-"}</div>
-            <div className="text-[11.5px] text-ink-3">{est ? (est.dominant ? "dominant side" : "minority, at spot") : " "}</div>
-          </div>
+      <div className="rounded-2xl bg-surface-2 ring-1 ring-inset ring-line" aria-live="polite">
+        <div className="flex items-baseline justify-between gap-2 px-4 pt-3.5">
+          <span className="text-[13px] font-medium text-ink">If this batch settled now</span>
+          <span className="text-[12px] text-ink-3">estimate</span>
         </div>
-        <p className="mt-3 text-[12px] leading-relaxed text-ink-3">
+        <dl className="grid grid-cols-3 divide-x divide-line px-1 py-3.5">
+          {[
+            ["You get", est ? fmtAmount(est.received, recvDec) : "-", recvSym],
+            ["You spend", est ? fmtAmount(est.spent, sold.decimals) : "-", sold.symbol],
+            ["Avg price", est?.avg ? fmtPrice(est.avg, quote.symbol) : "-", est ? (est.dominant ? "dominant side" : "minority, at spot") : "\u00a0"],
+          ].map(([k, v, u]) => (
+            <div key={k} className="min-w-0 px-3">
+              <dt className="text-[12px] text-ink-3">{k}</dt>
+              <dd className={cx("num mt-1 truncate text-[15px]", est ? "text-ink" : "text-ink-3")}>{v}</dd>
+              <dd className="truncate text-[11.5px] text-ink-3">{u}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="border-t border-line px-4 py-3 text-[12px] leading-relaxed text-ink-3">
           Computed in your browser with the hook's own engine on this batch's orders plus yours, before any <Term tip={TERMS.rebate}>rebate</Term>. The{" "}
           <Term tip={TERMS.dominant}>minority side</Term> fills at spot; the dominant side clinches on a rising price.
         </p>
@@ -231,15 +270,15 @@ export function OrderForm({
 
       {errors.form && <Notice tone="warn">{errors.form}</Notice>}
       {valid && (
-        <ol className="flex flex-col gap-1.5 text-[13px]" aria-label="Steps">
-          <Row label={`Approve ${fmtAmount(amt!, sold.decimals)} ${sold.symbol}`} state={!needsApproval && step !== "approving" ? "done" : step === "approving" ? "active" : "todo"} />
-          <Row label={`Escrow and place the order in batch ${ctx.joinsNew ? (ctx.batchId + 1n).toString() : ctx.batchId.toString()}`} state={step === "placing" ? "active" : step === "done" ? "done" : "todo"} />
+        <ol className="flex flex-col gap-2 text-[13px]" aria-label="Steps">
+          <Row n={1} label={`Approve ${fmtAmount(amt!, sold.decimals)} ${sold.symbol}`} state={!needsApproval && step !== "approving" ? "done" : step === "approving" ? "active" : "todo"} />
+          <Row n={2} label={`Escrow and place the order in batch ${batchLabel}`} state={step === "placing" ? "active" : step === "done" ? "done" : "todo"} />
         </ol>
       )}
       {!isConnected ? (
         <Notice tone="info">Connect a wallet to trade. On the local chain, pick a demo wallet from the Connect menu.</Notice>
       ) : (
-        <Button type="submit" variant="primary" size="lg" disabled={!valid || busy} loading={busy}>
+        <Button type="submit" variant="primary" size="lg" className="w-full" disabled={!valid || busy} loading={busy}>
           {step === "approving" ? `Approving ${sold.symbol}…` : step === "placing" ? "Placing order…" : `${needsApproval ? "Approve and " : ""}${side === "buy" ? "buy" : "sell"} ${base.symbol}`.replace(/^./, (c) => c.toUpperCase())}
         </Button>
       )}
@@ -247,13 +286,24 @@ export function OrderForm({
   );
 }
 
-function Row({ label, state }: { label: string; state: "todo" | "active" | "done" }) {
+function Row({ n, label, state }: { n: number; label: string; state: "todo" | "active" | "done" }) {
   return (
-    <li className={cx("flex items-center gap-2", state === "todo" ? "text-ink-3" : "text-ink")}>
-      {state === "done" ? <CheckCircle size={16} weight="fill" className="text-accent" aria-hidden /> : state === "active" ? <Spinner className="mx-px" /> : <Circle size={16} aria-hidden />}
+    <li className={cx("flex items-center gap-2.5", state === "todo" ? "text-ink-3" : "text-ink")}>
+      <span className="inline-flex size-5 shrink-0 items-center justify-center">
+        {state === "done" ? (
+          <CheckCircle size={18} weight="fill" className="text-accent" aria-hidden />
+        ) : state === "active" ? (
+          <Spinner />
+        ) : (
+          <span aria-hidden className="num inline-flex size-[18px] items-center justify-center rounded-full text-[11px] ring-1 ring-inset ring-line-strong">
+            {n}
+          </span>
+        )}
+      </span>
       <span>
         {label}
         {state === "done" && <span className="sr-only"> (done)</span>}
+        {state === "active" && <span className="sr-only"> (in progress)</span>}
       </span>
     </li>
   );

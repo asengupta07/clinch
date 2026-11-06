@@ -3,6 +3,7 @@ import { motion, useInView, useReducedMotion, type Variants } from "motion/react
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, ScrollRestoration } from "react-router";
 import { ShadeLab, WhaleLab } from "../pages/Home";
+import { Mark } from "../components/Mark";
 import { ClinchLadder } from "./ClinchLadder";
 import "./landing.css";
 
@@ -134,16 +135,6 @@ function Bezel({ children, className = "", inner = "" }: { children: ReactNode; 
     <div className={`rounded-[2rem] bg-white/[0.03] p-1.5 ring-1 ring-white/[0.075] ${className}`}>
       <div className={`h-full rounded-[calc(2rem-0.375rem)] bg-[var(--l-bg-2)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${inner}`}>{children}</div>
     </div>
-  );
-}
-
-function Mark({ className = "" }: { className?: string }) {
-  // a rising ladder: the clock steps up and clinches
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <path d="M3 19.5h4.5V15H12v-4.5h4.5V6H21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="21" cy="6" r="1.9" fill="var(--l-mint)" />
-    </svg>
   );
 }
 

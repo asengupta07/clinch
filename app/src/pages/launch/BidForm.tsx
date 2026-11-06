@@ -1,9 +1,9 @@
-import { CheckCircle, Circle } from "@phosphor-icons/react";
+import { Check, ShieldCheck } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
-import { maxUint256, type Address } from "viem";
+import { formatUnits, maxUint256, type Address } from "viem";
 import { useAccount } from "wagmi";
 import { erc20Abi, launchAbi } from "../../abi";
-import { Button, Field, Notice, NumberInput, Spinner, Term, TERMS, cx } from "../../components/ui";
+import { Badge, Button, Field, Notice, NumberInput, Spinner, Term, TERMS, cx } from "../../components/ui";
 import { useAllowance, useBalance, type LaunchData, type TokenMeta } from "../../hooks/data";
 import { useTx } from "../../hooks/useTx";
 import { fmt, fmtAmount, fmtDuration, fmtPrice } from "../../lib/format";
@@ -106,10 +106,14 @@ export function BidForm({
 
   const busy = step === "approving" || step === "bidding";
   const priceH = limitRaw ? rawToHumanPrice(limitRaw, sale.decimals, quote.decimals) : null;
+  const usd = /USD/.test(quote.symbol);
+  const avg = estimate && estimate.qty > 0n ? toNum(estimate.paid, quote.decimals) / toNum(estimate.qty, sale.decimals) : null;
+  const approveState: StepState = !needsApproval && step !== "approving" ? "done" : step === "approving" ? "active" : "todo";
+  const bidState: StepState = step === "bidding" ? "active" : step === "done" ? "done" : "todo";
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
@@ -117,7 +121,7 @@ export function BidForm({
       noValidate
     >
       <Field
-        label={`Maximum price per ${sale.symbol}`}
+        label={`Max price per ${sale.symbol}`}
         htmlFor="bid-price"
         error={errors.price}
         hint={`Reserve ${fmtPrice(reserveH, quote.symbol)}, ceiling ${fmtPrice(ceilH, quote.symbol)}. Bid what one token is really worth to you.`}
@@ -126,8 +130,8 @@ export function BidForm({
           id="bid-price"
           value={price}
           onChange={setPrice}
-          prefix={/USD/.test(quote.symbol) ? "$" : undefined}
-          suffix={/USD/.test(quote.symbol) ? undefined : quote.symbol}
+          prefix={usd ? "$" : undefined}
+          suffix={usd ? `per ${sale.symbol}` : quote.symbol}
           placeholder={reserveH.toFixed(2)}
           invalid={!!errors.price}
           describedBy={errors.price ? "bid-price-error" : "bid-price-hint"}
@@ -144,14 +148,20 @@ export function BidForm({
         hint={`Escrowed until settlement; whatever is not spent comes back. Minimum ${fmtAmount(p.minBid, quote.decimals)} ${quote.symbol}.`}
         right={
           isConnected && bal.data !== undefined ? (
-            <button
-              type="button"
-              className="text-[12.5px] text-ink-3 hover:text-ink"
-              onClick={() => setBudget(toNum(bal.data!, quote.decimals).toString())}
-              disabled={busy}
-            >
-              Balance <span className="num">{fmtAmount(bal.data, quote.decimals)}</span>
-            </button>
+            <span className="flex items-center gap-2 text-[12.5px] text-ink-3">
+              <span>
+                Balance <span className="num text-ink-2">{fmtAmount(bal.data, quote.decimals)}</span>
+              </span>
+              <button
+                type="button"
+                className="inline-flex h-6 items-center rounded-full bg-surface-2 px-2.5 text-[12px] font-medium text-ink-2 ring-1 ring-inset ring-line-strong transition-colors duration-200 hover:bg-surface-3 hover:text-ink disabled:opacity-45"
+                onClick={() => setBudget(formatUnits(bal.data!, quote.decimals))}
+                disabled={busy || bal.data === 0n}
+                aria-label={`Use your full balance, ${fmtAmount(bal.data, quote.decimals)} ${quote.symbol}`}
+              >
+                Max
+              </button>
+            </span>
           ) : null
         }
       >
@@ -167,73 +177,102 @@ export function BidForm({
         />
       </Field>
 
-      <div className="rounded-lg border border-line bg-surface-2/60 p-4" aria-live="polite">
-        <div className="text-[12.5px] font-medium text-ink">If the sale settled now with your bid</div>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          <div>
-            <div className="text-[12px] text-ink-3">You get</div>
-            <div className="num mt-0.5 text-[15px] text-ink">{estimate ? `${fmtAmount(estimate.qty, sale.decimals)}` : "-"}</div>
-            <div className="text-[11.5px] text-ink-3">{sale.symbol}</div>
-          </div>
-          <div>
-            <div className="text-[12px] text-ink-3">You pay</div>
-            <div className="num mt-0.5 text-[15px] text-ink">{estimate ? fmtAmount(estimate.paid, quote.decimals, { max: 2 }) : "-"}</div>
-            <div className="text-[11.5px] text-ink-3">{estimate && estimate.qty > 0n ? `avg ${fmtPrice(toNum(estimate.paid, quote.decimals) / toNum(estimate.qty, sale.decimals), quote.symbol)}` : quote.symbol}</div>
-          </div>
-          <div>
-            <div className="text-[12px] text-ink-3">Refunded</div>
-            <div className="num mt-0.5 text-[15px] text-ink">{estimate ? fmtAmount(estimate.refund, quote.decimals, { max: 2 }) : "-"}</div>
-            <div className="text-[11.5px] text-ink-3">{quote.symbol}</div>
-          </div>
+      <section className="rounded-2xl bg-surface-2 ring-1 ring-inset ring-line" aria-live="polite" aria-labelledby="bid-estimate-title">
+        <div className="flex items-center justify-between gap-3 px-4 pt-3.5">
+          <h3 id="bid-estimate-title" className="text-[13px] font-medium text-ink">
+            If the sale settled now with your bid
+          </h3>
+          <Badge className="h-5 shrink-0 px-2 text-[11px]">estimate</Badge>
         </div>
-        <p className="mt-3 text-[12px] leading-relaxed text-ink-3">
-          Computed in your browser with the contract's own engine on every current bid plus yours. It changes as others bid. Bidding your true value is
-          optimal, and splitting your budget across wallets can only lower what you get.
-        </p>
-      </div>
+        <dl className="grid grid-cols-3 gap-3 px-4 pb-3.5 pt-3">
+          <Readout label="You get" value={estimate ? fmtAmount(estimate.qty, sale.decimals) : null} unit={sale.symbol} strong />
+          <Readout label="You pay" value={estimate ? fmtAmount(estimate.paid, quote.decimals, { max: 2 }) : null} unit={quote.symbol} />
+          <Readout label="Refunded" value={estimate ? fmtAmount(estimate.refund, quote.decimals, { max: 2 }) : null} unit={quote.symbol} />
+        </dl>
+        <div className="border-t border-line px-4 py-3 text-[12px] leading-relaxed text-ink-3">
+          {estimate ? (
+            avg !== null ? (
+              <>
+                Average <span className="num text-ink-2">{fmtPrice(avg, quote.symbol)}</span> per {sale.symbol}, at or below your max. Computed in your browser
+                with the contract's own engine on every current bid plus yours; it changes as others bid.
+              </>
+            ) : (
+              <>At the current bids this bid would not win any tokens, so your whole budget would come back.</>
+            )
+          ) : (
+            <>Enter a max price and a budget to see what the auction would give you right now.</>
+          )}
+        </div>
+      </section>
+
+      <p className="flex gap-2 text-[12.5px] leading-relaxed text-ink-2">
+        <ShieldCheck size={16} className="mt-px shrink-0 text-accent" aria-hidden />
+        <span>Bidding your true value is optimal, and splitting your budget across wallets can only lower what you get.</span>
+      </p>
 
       {errors.form && <Notice tone="warn">{errors.form}</Notice>}
 
       {valid && (
-        <ol className="flex flex-col gap-1.5 text-[13px]" aria-label="Steps">
-          <StepRow
-            n={1}
-            label={`Approve ${fmtAmount(budgetRaw!, quote.decimals)} ${quote.symbol}`}
-            state={!needsApproval && step !== "approving" ? "done" : step === "approving" ? "active" : "todo"}
-          />
-          <StepRow n={2} label="Escrow the budget and place the bid" state={step === "bidding" ? "active" : step === "done" ? "done" : "todo"} />
+        <ol className="grid grid-cols-2 gap-2" aria-label="Steps">
+          <StepRow n={1} label={`Approve ${quote.symbol}`} detail={`${fmtAmount(budgetRaw!, quote.decimals)} ${quote.symbol}`} state={approveState} />
+          <StepRow n={2} label="Escrow and bid" detail="One transaction" state={bidState} />
         </ol>
       )}
 
       {!isConnected ? (
         <Notice tone="info">Connect a wallet to bid. On the local chain, pick a demo wallet from the Connect menu.</Notice>
       ) : (
-        <Button type="submit" variant="primary" size="lg" disabled={!valid || busy} loading={busy}>
+        <Button type="submit" variant="primary" size="lg" className="w-full" disabled={!valid || busy} loading={busy}>
           {step === "approving" ? `Approving ${quote.symbol}…` : step === "bidding" ? "Placing bid…" : needsApproval ? `Approve and bid` : "Place bid"}
         </Button>
       )}
-      <p className="text-[12px] text-ink-3">
-        Closes in <span className="num">{fmtDuration(secondsLeft)}</span>. Your budget is held in <Term tip={TERMS.escrow}>escrow</Term> until
-        settlement. Allowance: {allowance.data === undefined ? "-" : allowance.data >= maxUint256 / 2n ? "unlimited" : `${fmt(toNum(allowance.data, quote.decimals))} ${quote.symbol}`}.
+      <p className="text-[12px] leading-relaxed text-ink-3">
+        Closes in <span className="num text-ink-2">{fmtDuration(secondsLeft)}</span>. Your budget is held in <Term tip={TERMS.escrow}>escrow</Term> until
+        settlement. Allowance:{" "}
+        <span className="num">
+          {allowance.data === undefined ? "-" : allowance.data >= maxUint256 / 2n ? "unlimited" : `${fmt(toNum(allowance.data, quote.decimals))} ${quote.symbol}`}
+        </span>
+        .
       </p>
     </form>
   );
 }
 
-function StepRow({ n, label, state }: { n: number; label: string; state: "todo" | "active" | "done" }) {
+type StepState = "todo" | "active" | "done";
+
+function Readout({ label, value, unit, strong }: { label: string; value: string | null; unit: string; strong?: boolean }) {
   return (
-    <li className={cx("flex items-center gap-2", state === "todo" ? "text-ink-3" : "text-ink")}>
-      {state === "done" ? (
-        <CheckCircle size={16} weight="fill" className="text-accent" aria-hidden />
-      ) : state === "active" ? (
-        <Spinner className="mx-px" />
-      ) : (
-        <Circle size={16} aria-hidden />
+    <div className="min-w-0">
+      <dt className="text-[12px] text-ink-3">{label}</dt>
+      <dd className={cx("num mt-1 truncate text-[17px] leading-tight", value === null ? "text-ink-3" : strong ? "text-accent" : "text-ink")}>{value ?? "-"}</dd>
+      <dd className="truncate text-[11.5px] text-ink-3">{unit}</dd>
+    </div>
+  );
+}
+
+function StepRow({ n, label, detail, state }: { n: number; label: string; detail: string; state: StepState }) {
+  return (
+    <li
+      className={cx(
+        "flex min-w-0 items-center gap-2.5 rounded-2xl px-3 py-2.5 ring-1 ring-inset transition-colors duration-200",
+        state === "active" ? "bg-accent-soft ring-accent-line" : state === "done" ? "bg-surface-2 ring-line" : "ring-line",
       )}
-      <span>
+    >
+      <span
+        className={cx(
+          "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-[12px]",
+          state === "done" ? "bg-accent text-accent-ink" : state === "active" ? "text-accent" : "num bg-surface-2 text-ink-3 ring-1 ring-inset ring-line-strong",
+        )}
+        aria-hidden
+      >
+        {state === "done" ? <Check size={12} weight="bold" /> : state === "active" ? <Spinner /> : n}
+      </span>
+      <span className="min-w-0">
         <span className="sr-only">Step {n}: </span>
-        {label}
+        <span className={cx("block truncate text-[13px]", state === "todo" ? "text-ink-2" : "text-ink")}>{label}</span>
+        <span className="num block truncate text-[11.5px] text-ink-3">{detail}</span>
         {state === "done" && <span className="sr-only"> (done)</span>}
+        {state === "active" && <span className="sr-only"> (in progress)</span>}
       </span>
     </li>
   );

@@ -1,7 +1,7 @@
 {
   "chainId": 31337,
   "clnch": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  "deployBlock": 6,
+  "deployBlock": 1,
   "factory": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
   "hook": "0x96d86914e0e921F48FF89F5Ba6F5AC6e6aa4a880",
   "launch": "0x856e4424f806D16E8CBC702B3c0F2ede5468eae5",

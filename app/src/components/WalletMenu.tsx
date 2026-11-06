@@ -1,4 +1,5 @@
 import { CaretDown, Drop, SignOut, Wallet } from "@phosphor-icons/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useAccount, useBalance as useEthBalance, useConnect, useDisconnect } from "wagmi";
 import { chain, deployments, IS_LOCAL } from "../config/env";
@@ -62,7 +63,21 @@ export function Balances({ owner }: { owner: `0x${string}` }) {
   );
 }
 
+/** Deterministic two-tone disc from the address, so the connected wallet is recognisable at a glance. */
+function AddressAvatar({ address }: { address: string }) {
+  const h1 = parseInt(address.slice(2, 6), 16) % 360;
+  const h2 = parseInt(address.slice(-4), 16) % 360;
+  return (
+    <span
+      aria-hidden
+      className="inline-block size-9 shrink-0 rounded-full ring-1 ring-inset ring-line-strong"
+      style={{ background: `conic-gradient(from ${h1}deg, oklch(0.7 0.11 ${h1}), oklch(0.5 0.09 ${h2}), oklch(0.7 0.11 ${h1}))` }}
+    />
+  );
+}
+
 export function WalletMenu() {
+  const reduced = useReducedMotion();
   const { address, connector, isConnected, chainId } = useAccount();
   const { connectors, connectAsync, isPending } = useConnect();
   const { disconnectAsync } = useDisconnect();
@@ -126,16 +141,23 @@ export function WalletMenu() {
         {wrongChain && <Badge tone="warn" className="h-5 px-1.5">wrong network</Badge>}
         <CaretDown size={12} />
       </Button>
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
           role="dialog"
           aria-label="Wallet"
-          className="absolute right-0 z-40 mt-2 w-[min(92vw,360px)] rounded-xl border border-line-strong bg-surface p-4 shadow-[0_18px_48px_-20px_rgb(15_19_24/0.5)]"
+          initial={reduced ? false : { opacity: 0, y: -6, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          style={{ transformOrigin: "top right" }}
+          className="absolute right-0 z-40 mt-2 w-[min(92vw,372px)] rounded-[20px] border border-line-strong bg-surface p-4 shadow-[0_24px_64px_-24px_rgb(0_0_0/0.65)]"
         >
           {isConnected && address ? (
-            <div className="mb-4 border-b border-line pb-4">
+            <div className="mb-4 rounded-2xl bg-surface-2 p-3.5 ring-1 ring-inset ring-line">
               <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
+                <AddressAvatar address={address} />
+                <div className="min-w-0 flex-1">
                   <div className="text-[12px] text-ink-3">{isDemo ? "Demo wallet (local chain only)" : connector?.name}</div>
                   <div className="num flex items-center gap-1 text-[13px] text-ink">
                     {shortAddr(address)} <CopyButton value={address} label="Copy address" />
@@ -179,7 +201,7 @@ export function WalletMenu() {
                       onClick={() => connect(demoConnectorId(w.index))}
                       aria-pressed={active}
                       className={cx(
-                        "rounded-lg border px-2.5 py-2 text-left transition-colors",
+                        "rounded-xl border px-3 py-2.5 text-left transition-colors duration-200",
                         active ? "border-accent-line bg-accent-soft" : "border-line hover:border-line-strong hover:bg-surface-2",
                       )}
                     >
@@ -194,8 +216,9 @@ export function WalletMenu() {
             </div>
           )}
           {err && <p className="mt-3 text-[12.5px] text-bad">{err}</p>}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

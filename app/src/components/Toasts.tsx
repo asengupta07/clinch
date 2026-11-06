@@ -86,7 +86,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
                 transition={{ type: "spring", stiffness: 400, damping: 34 }}
-                className="pointer-events-auto flex w-full gap-3 rounded-xl border border-line-strong bg-surface p-3.5 shadow-[0_12px_32px_-16px_rgb(15_19_24/0.45)]"
+                className="pointer-events-auto flex w-full gap-3 rounded-2xl border border-line-strong bg-surface-2 p-4 shadow-[0_24px_48px_-24px_rgb(0_0_0/0.6)]"
                 role={t.kind === "error" ? "alert" : "status"}
               >
                 <div className="mt-0.5 shrink-0">
@@ -110,7 +110,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     </p>
                   )}
                 </div>
-                <button type="button" onClick={() => dismiss(t.id)} className="size-6 shrink-0 rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Dismiss">
+                <button type="button" onClick={() => dismiss(t.id)} className="size-6 shrink-0 rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Dismiss">
                   <X size={14} className="mx-auto" />
                 </button>
               </motion.div>
