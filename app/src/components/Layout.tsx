@@ -133,8 +133,13 @@ export function Layout({ children }: { children?: ReactNode }) {
             <Mark className="size-4 text-ink-3" />
             Sybil-proof adaptive clinching, arXiv 2610.36629. No analytics, no trackers.
           </span>
-          <span>
-            Settlement is permissionless: if this site disappears, anyone can call <code className="num text-ink-2">settle()</code>.
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>
+              Settlement is permissionless: if this site disappears, anyone can call <code className="num text-ink-2">settle()</code>.
+            </span>
+            <a href="/whitepaper.pdf" target="_blank" rel="noreferrer" className="text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
+              Whitepaper (PDF)
+            </a>
           </span>
         </div>
       </footer>

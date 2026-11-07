@@ -9,6 +9,8 @@ Clinch is the first implementation of the sybil-proof adaptive clinching mechani
 
 In both, bidding your true value and budget is a dominant strategy, and splitting a budget across wallets never helps. There is no identity layer.
 
+**Whitepaper:** [full, 13 pages](docs/whitepaper/clinch.pdf) and [short, 3 pages for print](docs/whitepaper/clinch-short.pdf). The app serves them at `/whitepaper.pdf` and `/whitepaper-short.pdf`. Sources are the `.typ` files next to them; after editing, run `typst compile` on the file and copy the PDF into `app/public/`.
+
 ## Why
 
 Every fair-launch design today picks two of three:

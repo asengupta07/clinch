@@ -191,6 +191,9 @@ function Nav() {
                 {n.label}
               </a>
             ))}
+            <a href="/whitepaper.pdf" target="_blank" rel="noreferrer" className="rounded-full px-3.5 py-2 text-[13.5px] text-[var(--l-ink-2)] transition-colors duration-300 hover:text-[var(--l-ink)]">
+              Whitepaper
+            </a>
           </div>
           <Link
             to="/launches"
@@ -808,6 +811,9 @@ function Closing() {
             <Link to="/how-it-works" className="hover:text-[var(--l-ink)]">
               Guarantees
             </Link>
+            <a href="/whitepaper.pdf" target="_blank" rel="noreferrer" className="hover:text-[var(--l-ink)]">
+              Whitepaper
+            </a>
           </div>
         </footer>
       </div>
