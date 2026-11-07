@@ -1,7 +1,8 @@
-import { CaretDown, Drop, SignOut, Wallet } from "@phosphor-icons/react";
+import { useChainModal, useConnectModal } from "@rainbow-me/rainbowkit";
+import { ArrowsLeftRight, CaretDown, Drop, SignOut, Wallet } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { useAccount, useBalance as useEthBalance, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useBalance as useEthBalance, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { chain, deployments, IS_LOCAL } from "../config/env";
 import { useBalance, useToken, type TokenMeta } from "../hooks/data";
 import { useTx } from "../hooks/useTx";
@@ -81,6 +82,9 @@ export function WalletMenu() {
   const { address, connector, isConnected, chainId } = useAccount();
   const { connectors, connectAsync, isPending } = useConnect();
   const { disconnectAsync } = useDisconnect();
+  const { switchChainAsync, isPending: switching } = useSwitchChain();
+  const { openConnectModal, connectModalOpen } = useConnectModal();
+  const { openChainModal } = useChainModal();
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -99,125 +103,167 @@ export function WalletMenu() {
     };
   }, [open]);
 
-  const injected = connectors.filter((c) => c.type !== DEMO_CONNECTOR_TYPE);
-  // EIP-6963 discovered wallets have their own entries; drop the generic one if any were found.
-  const named = injected.filter((c) => c.id !== "injected");
-  const walletOptions = named.length ? named : injected;
   const isDemo = connector?.type === DEMO_CONNECTOR_TYPE;
   const demoIdx = isDemo ? demoWallets.find((w) => w.address === address)?.index : undefined;
+  const hasDemo = IS_LOCAL && demoWallets.length > 0;
+  const wrongChain = isConnected && chainId !== chain.id;
 
-  const connect = async (id: string) => {
+  /** Browser and mobile wallets go through RainbowKit's modal. */
+  const chooseWallet = async () => {
     setErr(null);
-    const c = connectors.find((x) => x.id === id);
+    setOpen(false);
+    if (isConnected) await disconnectAsync();
+    openConnectModal?.();
+  };
+
+  const connectDemo = async (index: number) => {
+    setErr(null);
+    const c = connectors.find((x) => x.id === demoConnectorId(index));
     if (!c) return;
     try {
       if (isConnected) await disconnectAsync();
       await connectAsync({ connector: c, chainId: chain.id });
-      if (c.type === DEMO_CONNECTOR_TYPE) setOpen(false);
+      setOpen(false);
     } catch (e) {
       setErr(e instanceof Error ? e.message.split("\n")[0] : String(e));
     }
   };
 
-  const wrongChain = isConnected && chainId !== chain.id;
+  const switchNetwork = async () => {
+    setErr(null);
+    try {
+      await switchChainAsync({ chainId: chain.id });
+    } catch (e) {
+      // the wallet may not know this chain or refuse the request; RainbowKit's chain modal explains it
+      setErr(e instanceof Error ? e.message.split("\n")[0] : String(e));
+      openChainModal?.();
+    }
+  };
+
+  // Not connected and no demo wallets to offer: the button opens RainbowKit straight away.
+  const onButton = () => {
+    if (!isConnected && !hasDemo) return chooseWallet();
+    setOpen((o) => !o);
+  };
 
   return (
     <div className="relative" ref={ref}>
       <Button
         variant={isConnected ? "secondary" : "primary"}
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-haspopup="dialog"
+        onClick={onButton}
+        loading={!isConnected && (isPending || connectModalOpen)}
+        aria-expanded={isConnected || hasDemo ? open : undefined}
+        aria-haspopup={isConnected || hasDemo ? "dialog" : undefined}
         className="h-9"
       >
         <Wallet size={16} />
         {isConnected ? (
-          <span className="num text-[13px]">
-            {isDemo && demoIdx !== undefined ? `Demo #${demoIdx}` : shortAddr(address)}
-          </span>
+          <span className="num text-[13px]">{isDemo && demoIdx !== undefined ? `Demo #${demoIdx}` : shortAddr(address)}</span>
         ) : (
           <span className="text-[13px]">Connect</span>
         )}
-        {wrongChain && <Badge tone="warn" className="h-5 px-1.5">wrong network</Badge>}
-        <CaretDown size={12} />
+        {wrongChain && (
+          <Badge tone="warn" className="h-5 px-1.5">
+            wrong network
+          </Badge>
+        )}
+        {(isConnected || hasDemo) && <CaretDown size={12} />}
       </Button>
       <AnimatePresence>
-      {open && (
-        <motion.div
-          role="dialog"
-          aria-label="Wallet"
-          initial={reduced ? false : { opacity: 0, y: -6, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
-          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          style={{ transformOrigin: "top right" }}
-          className="absolute right-0 z-40 mt-2 w-[min(92vw,372px)] rounded-[20px] border border-line-strong bg-surface p-4 shadow-[0_24px_64px_-24px_rgb(0_0_0/0.65)]"
-        >
-          {isConnected && address ? (
-            <div className="mb-4 rounded-2xl bg-surface-2 p-3.5 ring-1 ring-inset ring-line">
-              <div className="flex items-center justify-between gap-2">
-                <AddressAvatar address={address} />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[12px] text-ink-3">{isDemo ? "Demo wallet (local chain only)" : connector?.name}</div>
-                  <div className="num flex items-center gap-1 text-[13px] text-ink">
-                    {shortAddr(address)} <CopyButton value={address} label="Copy address" />
+        {open && (
+          <motion.div
+            role="dialog"
+            aria-label="Wallet"
+            initial={reduced ? false : { opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformOrigin: "top right" }}
+            className="absolute right-0 z-40 mt-2 w-[min(92vw,372px)] rounded-[20px] border border-line-strong bg-surface p-4 shadow-[0_24px_64px_-24px_rgb(0_0_0/0.65)]"
+          >
+            {isConnected && address && (
+              <div className="rounded-2xl bg-surface-2 p-3.5 ring-1 ring-inset ring-line">
+                <div className="flex items-center justify-between gap-2">
+                  <AddressAvatar address={address} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12px] text-ink-3">{isDemo ? "Demo wallet (local chain only)" : connector?.name}</div>
+                    <div className="num flex items-center gap-1 text-[13px] text-ink">
+                      {shortAddr(address)} <CopyButton value={address} label="Copy address" />
+                    </div>
                   </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      await disconnectAsync();
+                      setOpen(false);
+                    }}
+                    aria-label="Disconnect"
+                  >
+                    <SignOut size={14} /> Disconnect
+                  </Button>
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => disconnectAsync()} aria-label="Disconnect">
-                  <SignOut size={14} /> Disconnect
-                </Button>
+                {wrongChain ? (
+                  <div className="mt-3 rounded-xl bg-warn-soft px-3 py-2.5 text-[12.5px] text-warn">
+                    Your wallet is on another network. Clinch runs on {chain.name}.
+                    <Button size="sm" variant="primary" className="mt-2 w-full" loading={switching} onClick={switchNetwork}>
+                      Switch to {chain.name}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-2">
+                    <Balances owner={address} />
+                  </div>
+                )}
               </div>
-              <div className="mt-2">
-                <Balances owner={address} />
-              </div>
-            </div>
-          ) : null}
+            )}
 
-          <div className="text-[12px] font-medium text-ink-3">Browser wallet</div>
-          <div className="mt-2 flex flex-col gap-1.5">
-            {walletOptions.length === 0 && <p className="text-[13px] text-ink-3">No browser wallet detected.</p>}
-            {walletOptions.map((c) => (
-              <Button key={c.uid} variant="secondary" className="justify-start" disabled={isPending} onClick={() => connect(c.id)}>
-                {c.icon ? <img src={c.icon} alt="" className="size-4" /> : <Wallet size={16} />}
-                {c.name === "Injected" ? "Browser wallet" : c.name}
-              </Button>
-            ))}
-          </div>
+            <Button variant="secondary" className={cx("w-full justify-center", isConnected && "mt-3")} onClick={chooseWallet}>
+              {isConnected ? (
+                <>
+                  <ArrowsLeftRight size={15} /> Switch wallet
+                </>
+              ) : (
+                <>
+                  <Wallet size={15} /> Connect a wallet
+                </>
+              )}
+            </Button>
 
-          {IS_LOCAL && demoWallets.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-baseline justify-between">
-                <div className="text-[12px] font-medium text-ink-3">Demo wallets</div>
-                <div className="text-[11.5px] text-ink-3">local anvil only, public test keys</div>
+            {hasDemo && (
+              <div className="mt-4">
+                <div className="flex items-baseline justify-between">
+                  <div className="text-[12px] font-medium text-ink-3">Demo wallets</div>
+                  <div className="text-[11.5px] text-ink-3">local anvil only, public test keys</div>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-1.5">
+                  {demoWallets.map((w) => {
+                    const active = isDemo && demoIdx === w.index;
+                    return (
+                      <button
+                        key={w.index}
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => connectDemo(w.index)}
+                        aria-pressed={active}
+                        className={cx(
+                          "rounded-xl border px-3 py-2.5 text-left transition-colors duration-200",
+                          active ? "border-accent-line bg-accent-soft" : "border-line hover:border-line-strong hover:bg-surface-2",
+                        )}
+                      >
+                        <div className="text-[12.5px] font-medium text-ink">
+                          #{w.index} <span className="font-normal text-ink-3">{w.label}</span>
+                        </div>
+                        <div className="num text-[11.5px] text-ink-3">{shortAddr(w.address)}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-1.5">
-                {demoWallets.map((w) => {
-                  const active = isDemo && demoIdx === w.index;
-                  return (
-                    <button
-                      key={w.index}
-                      type="button"
-                      disabled={isPending}
-                      onClick={() => connect(demoConnectorId(w.index))}
-                      aria-pressed={active}
-                      className={cx(
-                        "rounded-xl border px-3 py-2.5 text-left transition-colors duration-200",
-                        active ? "border-accent-line bg-accent-soft" : "border-line hover:border-line-strong hover:bg-surface-2",
-                      )}
-                    >
-                      <div className="text-[12.5px] font-medium text-ink">
-                        #{w.index} <span className="font-normal text-ink-3">{w.label}</span>
-                      </div>
-                      <div className="num text-[11.5px] text-ink-3">{shortAddr(w.address)}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {err && <p className="mt-3 text-[12.5px] text-bad">{err}</p>}
-        </motion.div>
-      )}
+            )}
+            {err && <p className="mt-3 text-[12.5px] text-bad">{err}</p>}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
