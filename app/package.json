@@ -12,7 +12,8 @@
     "preview:local": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "keeper": "tsx scripts/keeper.ts"
+    "keeper": "tsx scripts/keeper.ts",
+    "demo:activity": "tsx scripts/demo-activity.ts"
   },
   "dependencies": {
     "@anon-rpc/browser-harness": "0.4.0",
