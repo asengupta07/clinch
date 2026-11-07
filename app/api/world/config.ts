@@ -1,4 +1,4 @@
-import { fail, json, world } from "./_service";
+import { fail, json, world } from "./_service.js";
 
 export function GET() {
   try {

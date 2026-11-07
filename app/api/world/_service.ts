@@ -4,7 +4,7 @@
  * Files starting with "_" are not routes on Vercel.
  */
 import deployments from "../../src/deployments.sepolia.json" with { type: "json" };
-import { createWorldService, errorResponse } from "../../server/world";
+import { createWorldService, errorResponse } from "../../server/world.js";
 
 export const world = createWorldService(
   process.env,
