@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="veil" x1="0" x2="1">
+      <stop offset="0" stop-color="#070908" stop-opacity=".94"/>
+      <stop offset=".34" stop-color="#070908" stop-opacity=".70"/>
+      <stop offset=".62" stop-color="#070908" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#070908" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#veil)"/>
+  <g transform="translate(112 126)">
+    <path d="M0 46h32V14h32V-18h32V-50h20" transform="translate(0 54)" fill="none" stroke="#edf0ea" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="116" cy="4" r="12" fill="#8fe0b8"/>
+    <text x="0" y="220" fill="#edf0ea" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="116" font-weight="600" letter-spacing="-5">Clinch</text>
+    <text x="3" y="286" fill="#edf0ea" fill-opacity=".68" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="31" font-weight="400" letter-spacing="-.4">A thousand wallets never beat one.</text>
+    <rect x="3" y="346" width="64" height="3" rx="1.5" fill="#e6b36d"/>
+    <text x="3" y="401" fill="#edf0ea" fill-opacity=".46" font-family="Menlo, Monaco, monospace" font-size="17" letter-spacing="3.6">SYBIL-PROOF ADAPTIVE CLINCHING</text>
+  </g>
+</svg>

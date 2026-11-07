@@ -18,3 +18,16 @@ const LABELS: Record<number, Record<string, { name: string; symbol: string }>> =
 export function tokenLabel(address: Address): { name: string; symbol: string } | undefined {
   return LABELS[CHAIN_ID]?.[address.toLowerCase()];
 }
+
+/**
+ * Launches left out of the Launches list. The first World ID arm was deployed with a mock verifier
+ * that accepts any well-formed proof; it was replaced by the portal-verified gate and only stays on
+ * chain. Still reachable by its direct URL.
+ */
+const HIDDEN_LAUNCHES: Record<number, string[]> = {
+  11155111: ["0x0a33e81c5188b4b142a0e4192d72e8798f683017"],
+};
+
+export function isHiddenLaunch(address: Address): boolean {
+  return HIDDEN_LAUNCHES[CHAIN_ID]?.includes(address.toLowerCase()) ?? false;
+}

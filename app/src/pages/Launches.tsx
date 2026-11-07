@@ -6,6 +6,7 @@ import { useReadContracts } from "wagmi";
 import { launchAbi } from "../abi";
 import { buttonStyles, Card, cx, Notice, PageHeader, Segmented, Skeleton, StatusPill, TokenMark } from "../components/ui";
 import { deployments } from "../config/env";
+import { isHiddenLaunch } from "../config/tokenLabels";
 import { useLaunch, useLaunchList, useLaunchPreview, useToken, type LaunchData, type TokenMeta } from "../hooks/data";
 import { useChainClock } from "../hooks/useChain";
 import { fmt, fmtAmount, fmtPct, fmtPrice } from "../lib/format";
@@ -193,9 +194,6 @@ function humanBadge(quote: TokenMeta): { label: string; title: string } | null {
   if (deployments.humanGate && quote.address.toLowerCase() === deployments.humanGate.toLowerCase()) {
     return { label: "Humans only", title: "Bids need a World ID Proof of Human, capped per person" };
   }
-  if (quote.name.startsWith("Human-capped")) {
-    return { label: "Humans only, mock verifier", title: "Earlier World ID arm deployed with a mock verifier" };
-  }
   return null;
 }
 
@@ -298,7 +296,7 @@ const usd = (raw: bigint) => `$${fmt(toNum(raw, 6), { max: 0 })}`;
 
 export default function Launches() {
   const list = useLaunchList();
-  const all = useMemo(() => [...(list.data ?? [])].reverse(), [list.data]);
+  const all = useMemo(() => [...(list.data ?? [])].reverse().filter((a) => !isHiddenLaunch(a)), [list.data]);
   const summaries = useLaunchSummaries(all);
   const [filter, setFilter] = useState<Filter>("all");
 
