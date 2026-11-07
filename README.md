@@ -141,6 +141,34 @@ Settlement keeper (any funded Sepolia key; the public RPC is fine, and `LOG_RANG
 cd app && RPC_URL=https://ethereum-sepolia-rpc.publicnode.com KEEPER_PK=0x... VITE_DEPLOYMENTS=src/deployments.sepolia.json npm run keeper
 ```
 
+### Hosting the app on Vercel
+
+Works on the free Hobby plan. Import the repo and set:
+
+- **Root Directory:** `app`
+- **Framework Preset:** Vite. The build command (`npm run build`) and output directory (`dist`) are the preset's defaults.
+
+The public Sepolia config (chain, RPC, deployment addresses, explorer) is committed in `app/.env.sepolia`, and `npm run build` uses it. No env vars are needed for the core app.
+
+`app/vercel.json` rewrites every non-API path to `index.html`, so links like `/launches/0x…` survive a refresh.
+
+The World ID arm runs as three Vercel Functions in `app/api/world/`, using the same code as the dev server (`app/server/world.ts`). It needs these env vars in the Vercel project. Mark them sensitive and never prefix them with `VITE_`:
+
+- `WORLD_APP_ID`
+- `WORLD_RP_ID`
+- `WORLD_RP_SIGNING_KEY`
+- `WORLD_ACTION`
+- `WORLD_ENVIRONMENT`
+- `WORLD_VERIFY_URL`
+- `WORLD_ATTESTER_PK`
+
+The attester key must be the one whose address `AttestedWorldID` was deployed with.
+
+Optional:
+
+- `WORLD_RPC_URL` (defaults to publicnode Sepolia)
+- `VITE_WALLETCONNECT_PROJECT_ID`, for mobile and QR wallets
+
 ### Deploying your own
 
 Sepolia charges far more gas for contract creation than forge's local estimate, and HookMiner's CREATE2 search can exceed the simulation block gas limit, so both flags below are needed:
