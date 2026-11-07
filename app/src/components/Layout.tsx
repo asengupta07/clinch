@@ -105,7 +105,7 @@ export function Layout({ children }: { children?: ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-line bg-bg/75 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/65">
         <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-4 sm:px-6">
           <NavLink to="/" className="mr-2 flex items-center gap-2 text-[15px] font-medium tracking-tight text-ink" aria-label="Clinch home">
-            <Mark className="size-5 text-ink" />
+            <Mark className="size-7" />
             Clinch
           </NavLink>
           <NavItems id="desktop" className="relative isolate hidden items-center gap-0.5 md:flex" />

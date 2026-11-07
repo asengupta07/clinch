@@ -182,7 +182,7 @@ function Nav() {
           }`}
         >
           <Link to="/" className="mr-3 flex items-center gap-2 text-[15px] font-medium tracking-tight text-[var(--l-ink)]" aria-label="Clinch home">
-            <Mark className="size-5 text-[var(--l-ink)]" />
+            <Mark className="size-7" />
             Clinch
           </Link>
           <div className="hidden items-center md:flex">

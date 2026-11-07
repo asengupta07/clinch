@@ -256,3 +256,8 @@ p {
     transform: translate(-50%, 0);
   }
 }
+
+/* The logo is cream on transparent: darken it on the light theme so it keeps contrast. */
+:root[data-theme="light"] .clinch-mark {
+  filter: brightness(0.42) saturate(1.4);
+}
