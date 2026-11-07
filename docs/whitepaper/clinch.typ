@@ -1,4 +1,4 @@
-#set document(title: "Clinch: Sybil-proof token launches and batch swaps on Uniswap v4", author: "Arnab Sengupta")
+#set document(title: "Clinch: Sybil-proof token launches and batch swaps on Uniswap v4", author: "Team Clinch")
 #set page(paper: "a4", margin: (x: 2.3cm, y: 2.4cm), numbering: "1", number-align: center)
 #set text(font: "New Computer Modern", size: 10.5pt, lang: "en")
 #set par(justify: true, leading: 0.62em, spacing: 1.05em)
@@ -15,11 +15,11 @@
 #align(center)[
   #text(size: 17pt, weight: "bold")[Clinch: Sybil-proof token launches \ and batch swaps on Uniswap v4]
   #v(0.6em)
-  #text(size: 11pt)[Arnab Sengupta]
+  #text(size: 11pt)[Team Clinch]
   #v(0.15em)
   #text(size: 9.5pt)[ETHGlobal Mumbai, November 2026 \ Code: #link("https://github.com/asengupta07/clinch")[github.com/asengupta07/clinch]]
   #v(0.15em)
-  #text(size: 9pt, style: "italic")[Working paper, written over two days. Version of 7 November 2026.]
+  #text(size: 9pt, style: "italic")[Version 2.0]
 ]
 
 #v(0.8em)
