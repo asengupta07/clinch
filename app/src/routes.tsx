@@ -1,11 +1,11 @@
 import { lazy } from "react";
 import type { RouteObject } from "react-router";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import { Layout } from "./components/Layout";
+import { RouteError } from "./components/RouteError";
 import { buttonStyles } from "./components/ui";
 import Landing from "./landing/Landing";
 
-const Home = lazy(() => import("./pages/Home"));
 const Launches = lazy(() => import("./pages/Launches"));
 const LaunchDetail = lazy(() => import("./pages/launch/LaunchDetail"));
 const Markets = lazy(() => import("./pages/Markets"));
@@ -18,18 +18,20 @@ function NotFound() {
       <h1 className="text-[28px] font-semibold tracking-tight text-ink">Page not found</h1>
       <p className="mt-2 text-ink-2">That address does not match any page.</p>
       <Link to="/" className={buttonStyles("secondary", "md", "mt-6")}>
-        Back to the overview
+        Back home
       </Link>
     </div>
   );
 }
 
 export const routes: RouteObject[] = [
-  { path: "/", element: <Landing /> },
+  { path: "/", element: <Landing />, errorElement: <RouteError /> },
   {
     element: <Layout />,
+    errorElement: <RouteError />,
     children: [
-      { path: "/overview", element: <Home /> },
+      // the old in-app home; the landing page now has the Whale Lab and the comparison
+      { path: "/overview", element: <Navigate to="/" replace /> },
       { path: "/launches", element: <Launches /> },
       { path: "/launches/:address", element: <LaunchDetail /> },
       { path: "/markets", element: <Markets /> },
